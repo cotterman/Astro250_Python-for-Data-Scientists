@@ -4,30 +4,49 @@
 # http://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html
 
 
+import sys
 import argparse
+import urllib2
+import urllib
+import httplib
+from xml.dom.minidom import parseString
+import wolframalpha
 
 def get_command_lines():
+    """
+    Parse the info provided by user on command line
+    """
     parser = argparse.ArgumentParser(description='User input to parse')
     parser.add_argument('mystring', help='This is the string to evaluate')
-    parser.add_argument('-t', action='store_true', default=True,
+    parser.add_argument('-t', action='store_true', default=False,
                         dest='boolean_switch',
                         help='Set a switch to true')
-    parser.add_argument('-f', action='store_false', default=True,
+    parser.add_argument('-f', action='store_false', default=False,
                         dest='boolean_switch',
                         help='Set a switch to false')
     return parser.parse_args()
     
 
-def calculate(mystring, wolfram=True):
-    return eval(mystring)
-
+def calculate(mystring, wolfram=False):
+    """
+    Evaluate mystring
+    """
+    if wolfram==False:
+        return eval(mystring)
+    else:
+        client = wolframalpha.Client(UAGAWR-3X6Y8W777Q)
+        return client.query(mystring)
+        #return 99
 
 def main():
     results = get_command_lines()
-    evaluation = eval(results.mystring)
+    evaluation = calculate(results.mystring, results.boolean_switch)
     print 'The expression "' , results.mystring, '" evaluates to: \n', evaluation
     print 'Evaluated using the Wolfram-Alpha API   =', results.boolean_switch
 
-#This if statement says that this script (CalCalc.py) is run directly, then execute main.  (else do not)
+#This if-statement says that if this script (CalCalc.py) is run directly, then execute main.  
+    #Else, do not execute main (facilitates "from CalCalc import calculate")
 if __name__ == '__main__':
     main()
+
+
