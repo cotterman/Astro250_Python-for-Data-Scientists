@@ -6,10 +6,11 @@
 
 import sys
 import argparse
-import urllib2
-import urllib
+import urllib #this allows me to read remote website as though it were a file
+import urllib2 #this is a newer version of urllib
 import httplib
-from xml.dom.minidom import parseString
+from xml.dom.minidom import parseString #what I get thru W-A's API is an XML file
+import xml.etree.ElementTree as ET #this may be a better alternative to minidom
 import wolframalpha
 import nose
 
@@ -65,7 +66,10 @@ def calculate(mystring, wolfram=False):
         evaluation = client.query(mystring) 
         prelim = next(evaluation.results).text
     return reformat(prelim)
- 
+
+def find_myself():
+    t = urllib.urlopen(url)
+    t.read()
 
 ###########################################################################
 
@@ -78,12 +82,14 @@ def main():
 
 
 #This if-statement says that if this script (CalCalc.py) is run directly, then execute main.  
-    #Else, do not execute main (facilitates "from CalCalc import calculate")
+    #Else, do not execute main (facilitates running "from CalCalc import calculate")
 if __name__ == '__main__':
     main()
 
 
 ###########################################################################
+#these tests will run when you type: nosetests CalCalc.py
+
 
 def test_0():
     assert abs(4. - calculate("2**2")) < .001 #do not use wolfram-alpha unless necessary
