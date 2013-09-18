@@ -1,7 +1,7 @@
-# Instructions: Write a module called CalCalc, with a method called "calculate" that evaluates any string passed to it,
-# and can be used from either the command line (using argparse with reasonable flags) or imported within Python
-# Feel free to use something like eval(), but be aware of some of the nasty things it can do, and make sure it doesn't have too much power:
-# http://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html
+# Purpose: This module contains a method called "calculate" that evaluates any string 
+# passed to it, and can be used from either the command line or imported within Python
+# Author: Carolyn Cotterman
+# Date: 9-15-2013
 
 
 import sys
@@ -9,7 +9,6 @@ import argparse
 import urllib #this allows me to read remote website as though it were a file
 import urllib2 #this is a newer version of urllib
 import httplib
-from xml.dom.minidom import parseString #what I get thru W-A's API is an XML file
 import xml.etree.ElementTree as ET #this may be a better alternative to minidom
 import wolframalpha
 import nose

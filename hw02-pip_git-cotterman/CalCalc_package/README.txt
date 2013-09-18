@@ -3,14 +3,17 @@
 ##### Notes on using the CalCalc package #####################################
 ##############################################################################
 
-#Running from the command line:
+#To install the CalCalc package:
+    $ python setup.py install
+
+#To run CalCalc from the command line:
     $ python CalCalc.py "3+18" 
     options:
         -f (default) says to run using python's eval function if possible
            use the Wolfram-Alpha API if necessary
         -t says to run using the Wolfram-Alpha API automatically
 
-#Importing the calculate functionin Python:
+#To import the calculate function in Python:
     >>> from CalCalc import calculate
     >>> calculate("3+18")
     #note: the expression to evaluate should be enclosed in quotations
@@ -34,12 +37,12 @@
         >>> dir(mypackage.code1) #to view the methods available within code1.py
         >>> mypackage.code1.functionA(45) #to run FunctionA, with argument 45, which is contained in code1.py
 
+#I finished my package using distutils to create a standard, share-able zipped file:
+    $ cd ~/my-python-seminar/hw02-pip_git-cotterman/CalCalc_package
+    $ python setup.py sdist
+
 #The "setup.py" script will allow others to install my code into the Python path:
     $ python setup.py install
-
-#I finished my package using distutils to create a standard, share-able zipped file:
-    $ cd ~\my-python-seminar\hw02-pip_git-cotterman
-    $ python setup.py sdist
 
 
 ########################################################################################
