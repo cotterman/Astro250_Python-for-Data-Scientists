@@ -43,17 +43,42 @@ def which_method(wolfram, mystring):
     return wolfram
 
 def reformat(result):
+    if type(result)==str and result[-3:]=="...":
+        result = result[:-3] #eliminate the ... at the end
     try:
         float(result)
     except (ValueError):
         return result
     else:
-        return float(result)
+        return float(result)  
+
+def getOutpage(myinput):
+    query = {"input": myinput, "appid": "UAGAWR-3X6Y8W777Q", "format": "plaintext"}
+    return urllib2.urlopen("http://api.wolframalpha.com/v2/query?{}".format(urllib.urlencode(query)))
+
+def getWAsolution(myinput):
+    outpage = getOutpage(myinput)
+    tree = ET.parse(outpage)
+    root = tree.getroot()
+    for pod in root: #iterate thru the "pods"
+        try: #not all pods have titles and we do not want to get error
+            pod.attrib['title']
+        except KeyError: 
+            continue #skip over the pods without titles
+        
+        if pod.attrib['title']=='Result' or pod.attrib['title']=='Exact result' or pod.attrib['title']=='Decimal form':
+            prelim = pod[0][0].text
+        if pod.attrib['title']=='Decimal approximation':
+            prelim = pod[0][0].text
+
+    return reformat(prelim)
 
 def calculate(mystring, wolfram=False):
     """
     Evaluate mystring
     """
+    if type(mystring)!=str:
+        raise ValueError, "expression to evaluate must be enclosed in quotations"
     if wolfram==False:
         try:
             eval(mystring)
@@ -61,15 +86,10 @@ def calculate(mystring, wolfram=False):
             wolfram = True
         else:
             prelim =  eval(mystring)
-    if wolfram==True:
-        client = wolframalpha.Client("UY99YQ-8Y6WR5A3JQ")
-        evaluation = client.query(mystring) 
-        prelim = next(evaluation.results).text
-    return reformat(prelim)
-
-def calculate_with_wolfram():
-    t = urllib.urlopen(url)
-    t.read()
+            return reformat(prelim)
+    if wolfram==True: 
+        return getWAsolution(mystring)
+   
 
 ###########################################################################
 
@@ -88,20 +108,26 @@ if __name__ == '__main__':
 
 
 ###########################################################################
-#these tests will run when you type: nosetests CalCalc.py
+#these tests will run from terminal by typing: $ nosetests CalCalc.py
 
-
-def test_0():
-    assert abs(4. - calculate("2**2")) < .001 #do not use wolfram-alpha unless necessary
 
 def test_1():
+    assert abs(4. - calculate("2**2")) < .001 #do not use wolfram-alpha unless necessary
+
+def test_2():
     assert abs(4. - calculate("2**2", wolfram=True)) < .001 #use wolfram-alpha
 
 def test_3():
     assert calculate("the date of thanksgiving")
 
 def test_4():
-    assert abs(9.8696 - calculate("pi^2")) < .001 #this one has trouble.  why?
+    assert abs(9.8696 - calculate("pi^2")) < .001 
+
+def test_5():
+    assert abs(0.09090909 - calculate("2. / 22", wolfram=True)) < .001
+
+def test_6():
+    assert abs(0.09090909 - calculate("2. / 22", wolfram=False)) < .001
 
 
 
