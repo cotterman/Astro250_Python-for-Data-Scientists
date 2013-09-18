@@ -18,6 +18,8 @@
     >>> calculate("3+18")
     #note: the expression to evaluate should be enclosed in quotations
 
+#To run tests:
+    $ nosetests CalCalc.py
 
 
 ###############################################################################
@@ -58,7 +60,7 @@
         then your virtual environment will inherit packages from /usr/lib/python2.7/site-packages 
         (or wherever your global site-packages directory is).  For example:
         $ virtualenv --system-site-packages ENV1
-    #To activate the environment:
+    #To activate the environment, cd to ENV1 and type:
         $ source bin/activate
         #This will change your $PATH so its first entry is the virtualenv's bin/ directory. 
         #If you directly run a script or the python interpreter from the virtualenv's bin/ directory 

@@ -10,8 +10,6 @@ import urllib #this allows me to read remote website as though it were a file
 import urllib2 #this is a newer version of urllib
 import httplib
 import xml.etree.ElementTree as ET #this may be a better alternative to minidom
-import wolframalpha
-import nose
 
 ################################################################
 
