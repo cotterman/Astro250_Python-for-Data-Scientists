@@ -23,7 +23,13 @@ Please run "graph_stocks.py" to produce "q2_my_stocks.pdf"
 ####### Question 3 (In the 'Q3' folder) ###########
 
 "brush_flower.py" contains my code for this question.
-I ran it to produce "q3_flowers_stationary.pdf" before adding interactivity.
+I ran this code to produce "q3_flowers_stationary.pdf" before adding interactivity.
+
+If you run brush_flower.py, you'll find that you can interactively draw
+a rectangle on the plot (and size it by dragging with the mouse.)
+But I ran out of time before putting in other functionality :(
+
+
 
 
 
