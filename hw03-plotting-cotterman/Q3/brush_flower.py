@@ -13,6 +13,7 @@ class FlowerPlot(object):
         self.f.set_size_inches(18., 12.)
         self.f.suptitle('Flower Characteristics', fontsize='x-large')
 
+        # mapping from flower type to color
         ctable = {'setosa':'r','versicolor':'g','virginica':'b'}
         for row, trait1 in enumerate(self.traits):
             for col, trait2 in enumerate(self.traits):
@@ -26,21 +27,22 @@ class FlowerPlot(object):
                         horizontalalignment='left', verticalalignment='top')
                 
         return
-
+ 
     # __init__ is called whenever an object instance is initialized
     def __init__(self, data_fname):
+
+        #using self.XXX means that we will store attribute XXX for 
+            #in this instance of FlowerPlot
         self.q3data = pd.read_csv(data_fname)
         self.traits = list(self.q3data.columns)[:4]
         self.unique_species = set(self.q3data['species'])
-
-        # mapping from flower type to color
         self._init_plot()
+
         return
 
 # Plot the data in a 4x4 grid
 my_plot = FlowerPlot('flowers.csv')
-
-# plt.savefig('q3_flowers_stationary.pdf')
+plt.savefig('q3_flowers_stationary.pdf')
 
 # Interactively draw rectangles on one of the subplots
 
