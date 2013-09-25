@@ -23,6 +23,7 @@ for row, trait1 in enumerate(traits):
     for col, trait2 in enumerate(traits):
         axes[row,col].scatter(q3data[trait1], q3data[trait2], c=[ctable[s] for s in q3data['species']])
 
+axes[0,0].set_title('Flower Characteristics')
 
 #save plot
 plt.savefig('q3_flowers_stationary.pdf')
