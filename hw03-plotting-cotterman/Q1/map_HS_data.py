@@ -24,20 +24,15 @@ print q1data.head()
     #note: most "Dropped" schools have a start year, as they are schools that started and then dropped out of program
 #q1data[['latitude','longitude']][q1data.school_status=="Dropped"] #get subset of data
 #q1data.ix[q1data.school_status=="Dropped", ['latitude','longitude']] #equivalent to line above
-sdata = q1data.ix[q1data.school_status=="Dropped", ['latitude','longitude','training_start_yr']] 
 
 #Map locations of participating schools using latitude and longitude
     #Create your Basemap with 'i' resolution, otherwise it will take forever to draw.
-# Draw the stations on a real map of the Earth.
-# Find boundaries 
-lon0 = 0.995*sdata['longitude'].min()
-lon1 = 1.01*sdata['longitude'].max()
-lat0 = 0.995*sdata['latitude'].min()
-lat1 = 1.01*sdata['latitude'].max()
 
-# Geographic grid to draw
-parallels = np.linspace(lat0, lat1, 5)
-meridians = np.linspace(lon0, lon1, 5)
+# Use known boundaries of California 
+lon0 = -125
+lon1 = -114
+lat0 = 32
+lat1 = 42
 
 # Resolution of the basemap to load ('f' is *very* expensive)
 resolution = 'i' # intermediate resolution for map info
@@ -55,12 +50,31 @@ m.drawcountries()
 
 
 # Now draw a scatter plot on the same map
-m.scatter(sdata['longitude'], sdata['latitude'], marker='o', color='k')
-# Add a colorbar to the figure, linked to the scatterplot color scale
-#f2.colorbar(s)
+s2006 = ax2.scatter(q1data.ix[q1data.training_start_yr==2006,'longitude'], 
+                   q1data.ix[q1data.training_start_yr==2006,'latitude'], color='r')
+s2007 = ax2.scatter(q1data.ix[q1data.training_start_yr==2007,'longitude'], 
+                   q1data.ix[q1data.training_start_yr==2007,'latitude'], color='y')
+s2008 = ax2.scatter(q1data.ix[q1data.training_start_yr==2008,'longitude'], 
+                   q1data.ix[q1data.training_start_yr==2008,'latitude'], color='g')
+s2009 = ax2.scatter(q1data.ix[q1data.training_start_yr==2009,'longitude'], 
+                   q1data.ix[q1data.training_start_yr==2009,'latitude'], color='c')
+s2010 = ax2.scatter(q1data.ix[q1data.training_start_yr==2010,'longitude'], 
+                   q1data.ix[q1data.training_start_yr==2010,'latitude'], color='b')
+s2011 = ax2.scatter(q1data.ix[q1data.training_start_yr==2011,'longitude'], 
+                   q1data.ix[q1data.training_start_yr==2011,'latitude'], color='m')
+#sOnline = ax2.scatter(q1data.ix[q1data.school_status=="Online only",'longitude'], 
+  #                 q1data.ix[q1data.school_status=="Online only",'latitude'], color='k')
+
+#ax2.legend((s2006, s2007, s2008, s2009, s2010, s2011, sOnline), 
+ #         ('2006-2007', '2007-2008', '2008-2009', '2009-2010', '2010-2011', '2011-2012', 'Online only'))
+
+ax2.legend((s2006, s2007, s2008, s2009, s2010, s2011), 
+          ('2006-2007', '2007-2008', '2008-2009', '2009-2010', '2010-2011', '2011-2012'))
+
 
 # Label the figure and every point by its station label
 plt.title('Onsite Healthy Schools Program Participation',fontsize=12)
+
 #for record in tab:
  #   ax2.text( record['lon']+0.04, record['lat']+0.04, record['station'], 
   #          weight='bold', color='yellow', zorder=10)
