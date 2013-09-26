@@ -3,9 +3,6 @@ import numpy as np
 import pandas as pd
 from matplotlib.patches import Rectangle
 
-
-#obtain x and y coordinates of space that you click on
-
 class FlowerPlot(object):
 
     """Create a plot that displays traits in grid of scatter plots"""
