@@ -68,6 +68,12 @@ def summarize_images(categories, ppath, foldername):
             images_data.append(image_features)
     return images_data
 
+def examine_images_data(images_data):
+    print "type(images_data): ", type(images_data) #we have a list
+    print "number of images: " , len(images_data) #4244 images
+    print "#features: " , len(images_data[15]) - 1 #each image has Xx features + category name
+    print "example of feature values: " , images_data[15] #list containing features and category for image 15
+
 
 ###############################################################################
 
@@ -76,12 +82,9 @@ def main():
     ppath = get_ppath() #path of folder containing images
     foldername = "50_categories" #name of folder containing images
     categories = get_categories(ppath, foldername) #list of image categories
-    print categories
     images_data = summarize_images(categories, ppath, foldername) #list of lists
-    print type(images_data)
-    print len(images_data) #4244 images
-    #print len(images_data[15]) #each image has Xx features + category name
-    print images_data[15] #list containing features and category for image 15
+    examine_images_data(images_data) #print basic info on what images_data contains
+
     
     #get inputs for random forest
     # training
@@ -103,6 +106,18 @@ def main():
     #test classifier using remaining 1/10
       #  preds = rf1.predict(Xte)
       #  print float(sum(preds!=Yte))/len(Yte)
+
+    #Use cross-validation function
+    X = np.array([f[:-1] for f in images_data]) #just the features (X will be a list of lists)
+    Y = np.array([c[-1] for c in images_data]) #list of categories
+    nfolds = 3 
+
+    def print_cv_score_summary(model, xx, yy, cv):
+        scores = cross_val_score(model, xx, yy, cv=cv, n_jobs=-1)
+        print("mean: {:3f}, stdev: {:3f}".format(np.mean(scores), np.std(scores)))
+
+    print_cv_score_summary(rf1, X, Y,
+        cv=cross_validation.KFold(len(Y), nfolds, shuffle=True, random_state=1))
     
 main()
  
