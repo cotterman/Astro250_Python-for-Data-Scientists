@@ -1,60 +1,113 @@
 
 import numpy as np
 import scipy as sp
-import os  #The os.path module has several functions for manipulating files and directories
+import os  #has several functions for manipulating files and directories
 import matplotlib.pyplot as plt
 from scipy import ndimage
 from scipy import misc
 from scipy import stats
 from scipy.ndimage import imread
 import scipy.ndimage as ndi
+from sklearn.ensemble import RandomForestClassifier
+from sklearn import cross_validation
+from sklearn.cross_validation import cross_val_score
 
+def get_ppath():
+    """
+    Assume this script is in same folder as the "50_categories" folder
+    and assume the "50_categories" folder contains images
+    in folders labeled according to category (e.g., "camel", "airplane", etc.)
+    """
+    print ("This directory should contain script and folder of folders with images: ")
+    ppath , file = os.path.split(os.path.realpath(__file__))
+    print(ppath)
+    return ppath
 
-#Assume this script is in same folder as the "50_categories" folder
-    #and assume the "50_categories" folder contains images
-    #in folders labeled according to category (e.g., "camel", "airplane", etc.)
-print ("Directory containing script and folder of folders: ")
-ppath , file = os.path.split(os.path.realpath(__file__))
-print(ppath)
+def get_categories(ppath, foldername):
+    """
+    Obtain list of categories, taken from folder titles
+    """
+    categories = os.listdir(os.path.join(ppath, foldername)) 
+    categories[:] = [c for c in categories if c != ".DS_Store"]
+    return categories
 
-#Obtain list of categories, taken from folder titles
-foldername = "50_categories"
-categories = os.listdir(os.path.join(ppath, foldername)) 
-print categories
-
-#obtain images within each category
-#for category in categories:
- #   if category != ".DS_Store": #would be cleaner to take this out of the "categories" list
-  #      datapath = os.path.join(ppath, foldername, category)
-   #     images_in_cat = os.listdir(datapath) #list of all image names in category
-    #    for image_name in images_in_cat:
-            #print image_name
-            #image = misc.imread(datapath + "/" + image_name) 
+def obtain_features(image):
     
-# Write a set of methods that takes as input one of these images, and then computes real-numbered
-#features as the return.  You should produce at least 15 features. 
-category = "camel"
-datapath = os.path.join(ppath, foldername, category)
-image_name = str(category) + "_0001" + ".jpg"
-image = misc.imread(datapath + "/" + image_name)
-plt.imshow(image)
-print type(image)
+    #for color images
+    if image.ndim>2:
+        #Average of each of the channels (R, G, B)
+        meanR = image[:,:,0].mean()
+        meanG = image[:,:,1].mean()
+        meanB = image[:,:,2].mean()
+        #Standard deviation of each of the channels (R, G, B)
+        stdR = image[:,:,0].std()
+        stdG = image[:,:,1].std()
+        stdB = image[:,:,2].std()
+    #for black and white images
+    else:
+        meanR = image[:,:].mean()
+        meanG = image[:,:].mean()
+        meanB = image[:,:].mean()
+        stdR = image[:,:].std()
+        stdG = image[:,:].std()
+        stdB = image[:,:].std()
 
-#Average of each of the channels (R, G, B)
-meanR = image[:,:,0].mean()
-meanG = image[:,:,1].mean()
-meanB = image[:,:,2].mean()
+    features = [meanR, meanG, meanB, stdR, stdG, stdB]
+    return features
 
-#Standard deviation of each of the channels (R, G, B)
-stdR = image[:,:,0].std()
-stdG = image[:,:,1].std()
-stdB = image[:,:,2].std()
+def summarize_images(categories, ppath, foldername):
+    images_data = [] #create a list to contain summarized image data
+    for category in categories:
+        datapath = os.path.join(ppath, foldername, category)
+        images_in_cat = os.listdir(datapath) #list of all image names in category
+        for image_name in images_in_cat:
+            image = misc.imread(datapath + "/" + image_name)
+            #print image_name
+            image_features = obtain_features(image)
+            image_features.append(category)
+            images_data.append(image_features)
+    return images_data
 
-#Correlation between R&G, G&B, R&B
-corRG = sp.stats.pearsonr(image[:,:,0],image[:,:,1])
 
-features = [meanR, meanG, meanB, stdR, stdG, stdB, corRG]
-print features
+###############################################################################
+
+def main():
+    
+    ppath = get_ppath() #path of folder containing images
+    foldername = "50_categories" #name of folder containing images
+    categories = get_categories(ppath, foldername) #list of image categories
+    print categories
+    images_data = summarize_images(categories, ppath, foldername) #list of lists
+    print type(images_data)
+    print len(images_data) #4244 images
+    #print len(images_data[15]) #each image has Xx features + category name
+    print images_data[15] #contains features and category for image 15
+    
+    #get inputs for random forest
+    # training
+    #train = 500
+    #Xtr = digits['data'][:train]
+    #Ytr = digits['target'][:train]
+    #print("training size: " + str(len(Ytr)))
+    # testing set
+    #Xte = digits['data'][train:]
+    #Yte = digits['target'][train:]
+    #print("testing size: " + str(len(Yte)))
+
+    #build classifier using 9/10 of data
+    ntree = 10 #number of trees in the forest
+    mtry = "sqrt" #number of features to consider when looking for best split
+    rf1 = RandomForestClassifier(n_estimators=ntree, max_features=mtry)
+     #   print rf1.feature_importances
+    #rf1.fit(Xtr, Ytr)
+    #test classifier using remaining 1/10
+      #  preds = rf1.predict(Xte)
+      #  print float(sum(preds!=Yte))/len(Yte)
+    
+main()
+ 
+
+###############################################################################
 
 # Based on the feature set for each image, build a random forest classifier (scikits.learn).
 #Produce metrics on your estimated error rates using cross-validation. How much better is this
