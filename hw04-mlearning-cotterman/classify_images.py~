@@ -78,12 +78,12 @@ def summarize_trimages(categories, ppath, foldername):
 
 def summarize_vimages(ppath, foldername):
     """
-    for each image in validation set, obtain feature list.
+    For each image in validation set, obtain feature list.
     """
     images_data = []
     datapath = os.path.join(ppath, foldername)
     validation_images = os.listdir(datapath) #list of validation image names
-    validation_images.sort()
+    validation_images.sort() #output will now be in more sensible order
     for image_name in validation_images:
         image = misc.imread(datapath + "/" + image_name)
         image_features = obtain_features(image)
@@ -238,10 +238,6 @@ def main():
     ### Use the pickled classifier to classify validation images ###
     vfolder = "validation_images" #name of folder containing images to classify
     run_final_classifier(vfolder)
-
-    
-main()
- 
 
 #This if-statement says that if this script (classify_images.py) is run directly, then execute main.  
     #Else, do not execute main (facilitates running "from classify_images import run_final_classifier")

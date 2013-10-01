@@ -239,13 +239,10 @@ def main():
     vfolder = "validation_images" #name of folder containing images to classify
     run_final_classifier(vfolder)
 
-    
-main()
- 
-
 #This if-statement says that if this script (classify_images.py) is run directly, then execute main.  
     #Else, do not execute main (facilitates running "from classify_images import run_final_classifier")
 if __name__ == '__main__':
+    warnings.simplefilter("ignore")
     main()
 
 ###############################################################################
