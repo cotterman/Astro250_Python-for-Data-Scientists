@@ -20,7 +20,8 @@ from sklearn import metrics
 
 
 def get_ppath():
-    """
+    """Obtain path of folder in which this script is located.
+
     Assume this script is in same folder as the "50_categories" folder
     and assume the "50_categories" folder contains images
     in folders labeled according to category (e.g., "camel", "airplane", etc.).
@@ -30,17 +31,19 @@ def get_ppath():
     print(ppath)
     return ppath
 
+
 def get_categories(ppath, foldername):
-    """
-    Obtain list of categories, taken from folder titles.
+    """Obtain list of categories, taken from folder titles.
+
     """
     categories = os.listdir(os.path.join(ppath, foldername)) 
     categories[:] = [c for c in categories if c != ".DS_Store"]
     return categories
 
+
 def obtain_features(image):
-    """
-    Calculate image features, to be used as input for model.
+    """Calculate image features, to be used as input for model.
+
     """
     
     #for color images
@@ -65,9 +68,29 @@ def obtain_features(image):
     features = [meanR, meanG, meanB, stdR, stdG, stdB]
     return features
 
-def summarize_trimages(categories, ppath, foldername):
+
+def feature_descriptions(feature_names, printme):
+    """ Create dictionary containing feature descriptions.  And print features used (optional).
+
     """
-    For each image in training data, obtain image category and features list.
+    features_desc = {
+        'meanR': "Mean value of red channel.  (Or of single channel if only one color value)",
+        'meanG': "Mean value of green channel.  (Or of single channel if only one color value)",
+        'meanB': "Mean value of blue channel.  (Or of single channel if only one color value)",
+        'stdR':  "Standard deviation of red channel.  (Or of single channel if only one color value)",
+        'stdG':  "Standard deviation of green channel.  (Or of single channel if only one color value)",
+        'stdB':  "Standard deviation of blue channel.  (Or of single channel if only one color value)"
+        }
+    if printme==True:
+        print "*** Features used for prediction ***"
+        for feature in feature_names:
+            print feature , ": " , features_desc[feature]
+    print "\n"
+
+
+def summarize_trimages(categories, ppath, foldername):
+    """For each image in training data, obtain image category and features list.
+
     """
     images_data = [] #create a list to contain summarized image data
     for category in categories:
@@ -79,6 +102,7 @@ def summarize_trimages(categories, ppath, foldername):
             image_features.append(category)
             images_data.append(image_features)
     return images_data
+
 
 def summarize_vimages(ppath, foldername):
     """Obtain feature list for each image in validation set.
@@ -106,8 +130,8 @@ def examine_images_data(images_data):
 
 
 def random_guessing(Y, categories):
-    """
-    Calculate expected value of loss function if we guessed randomly.
+    """Calculate expected value of loss function if we guessed randomly.
+
     """
     print "Expected score (fraction of guesses that are correct)"
     print "if we guess each category with equal probability: " , \
@@ -115,6 +139,9 @@ def random_guessing(Y, categories):
 
 
 def feature_combos(images_data):
+    """ Find all 3-feature combos in the feature space.
+
+    """
     nfeatures = len(images_data[0])-1
     feature_choices = [] #create a list of lists
     for i in xrange(nfeatures):
@@ -128,14 +155,14 @@ def feature_combos(images_data):
 
 
 def best_random_forest(X, Y, nfolds, parameters):
-    """
-    Fit "best" random forest by using parameters that minimize loss function 
-    (i.e., maximize the score)
+    """Fit "best" random forest by using parameters that minimize loss function 
+
     """
     njobs = 1 #number of jobs to run in parallel -- pickle problems may occur if njobs > 1
     rf_tune = grid_search.GridSearchCV(RandomForestClassifier(), parameters,
                                        score_func=metrics.zero_one_score, n_jobs = njobs, cv = nfolds)
     return rf_tune.fit(X, Y)
+
 
 def print_results(rf_opt):
     print("Grid of scores:\n" + str(rf_opt.grid_scores_) + "\n")
@@ -144,24 +171,20 @@ def print_results(rf_opt):
 
 
 def build_classifier(X, Y, nfolds, parameters):
+    """Build classifier using "best" random forest.
+
     """
-    Build classifier using "best" random forest.
-    """
-    print "here1"
     rf_opt = best_random_forest(X, Y, nfolds, parameters)
     print_results(rf_opt) #Results of the grid search for optimal random forest parameters.
     mypickledRF = open('RFClassifier' , 'wb') #w is for write; b is for binary
     pickle.dump(rf_opt.best_estimator_ , mypickledRF) #Save classifier in file "RFclassifier"
     mypickledRF.close()
-    print "here2"
 
-def best_feature_combo(images_data, X, Y, nfolds2, parameters2):
+
+def best_feature_combo(images_data, X, Y, nfolds2, parameters2, feature_names):
+    """Find combination of features that produces highest score.
+
     """
-    Find combination of features that produces highest score.
-    """
-    #make sure this list matches the one constructed in the obtain_features function
-        #the order must also be identical
-    feature_names = np.array(["meanR", "meanG", "meanB", "stdR", "stdG", "stdB"])
     feature_choices = feature_combos(images_data) #list of 3-feature options
 
     best_combo = [0,0,0]
@@ -175,8 +198,7 @@ def best_feature_combo(images_data, X, Y, nfolds2, parameters2):
             best_score = score
             best_combo = fcombo
     
-    print "Indices of most important 3 features: \n" , best_combo
-    print "Names of the most important 3 features: \n" , feature_names[np.array(best_combo)]
+    print "Names of the most important 3 features: \n" , [feature_names[i] for i in best_combo]
     print "Score obtained using just these features: \n" , best_score
 
 
@@ -189,8 +211,8 @@ def print_predicted(vNames, vY_predicted):
 
 
 def run_final_classifier(vfolder):
-    """
-    Use the pickled classifier to classify validation images.
+    """Use the pickled classifier to classify validation images.
+
     Pickled classifier runs random forest using parameters
     deemed to be optimal from a cross-validated grid search
     with provided training images.
@@ -220,6 +242,11 @@ def main():
     X = np.array([f[:-1] for f in images_data]) #just the features (X will be a list of lists)
     Y = np.array([c[-1] for c in images_data]) #list of categories
 
+    #make sure this list matches the one constructed in the obtain_features function
+    #the order must also be identical
+    feature_names = ["meanR", "meanG", "meanB", "stdR", "stdG", "stdB"] #features used
+    feature_descriptions(feature_names, printme=True) #print features and their descriptions
+
 
     ### Calculate expected score if guessing category randomly#
     random_guessing(Y, categories)  
@@ -236,12 +263,15 @@ def main():
     ### Find the 3 most important features? Test 455 combos (455 = 15 choose 3) ###
     nfolds2 = 3
     parameters2 = {'n_estimators':[5]} # rf parameters to try
-    best_feature_combo(images_data, X, Y, nfolds2, parameters2)
+    best_feature_combo(images_data, X, Y, nfolds2, parameters2, feature_names)
 
 
     ### Use the pickled classifier to classify validation images ###
     vfolder = "validation_images" #name of folder containing images to classify
     run_final_classifier(vfolder)
+
+
+###############################################################################
 
 #This if-statement says that if this script (classify_images.py) is run directly, then execute main.  
     #Else, do not execute main (facilitates running "from classify_images import run_final_classifier")
