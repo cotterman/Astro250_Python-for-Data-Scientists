@@ -1,19 +1,23 @@
+import os  #has several functions for manipulating files and directories
+import pickle
+import warnings
 
 import numpy as np
-import scipy as sp
-import os  #has several functions for manipulating files and directories
 import matplotlib.pyplot as plt
+
+import scipy as sp
 from scipy import ndimage
 from scipy import misc
 from scipy import stats
 from scipy.ndimage import imread
 import scipy.ndimage as ndi
+
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import cross_validation
 from sklearn.cross_validation import cross_val_score
 from sklearn import grid_search
 from sklearn import metrics
-import pickle
+
 
 def get_ppath():
     """
@@ -77,8 +81,8 @@ def summarize_trimages(categories, ppath, foldername):
     return images_data
 
 def summarize_vimages(ppath, foldername):
-    """
-    For each image in validation set, obtain feature list.
+    """Obtain feature list for each image in validation set.
+    
     """
     images_data = []
     datapath = os.path.join(ppath, foldername)
@@ -93,8 +97,8 @@ def summarize_vimages(ppath, foldername):
         
 
 def examine_images_data(images_data):
-    """
-    Examine content and type of data stored in images_data.
+    """Examine content and type of data stored in images_data.
+        
     """
     print "number of images: " , len(images_data) #4244 images
     print "#features: " , len(images_data[0]) - 1 #each image has Xx features + category name
@@ -113,11 +117,11 @@ def random_guessing(Y, categories):
 def feature_combos(images_data):
     nfeatures = len(images_data[0])-1
     feature_choices = [] #create a list of lists
-    for i in range(nfeatures):
+    for i in xrange(nfeatures):
         f1 = i
-        for j in range(i+1, nfeatures):
+        for j in xrange(i+1, nfeatures):
             f2 = j
-            for k in range(j+1, nfeatures): 
+            for k in xrange(j+1, nfeatures): 
                 f3 = k
                 feature_choices.append([f1, f2, f3])
     return feature_choices
@@ -242,7 +246,9 @@ def main():
 #This if-statement says that if this script (classify_images.py) is run directly, then execute main.  
     #Else, do not execute main (facilitates running "from classify_images import run_final_classifier")
 if __name__ == '__main__':
-    main()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        main()
 
 ###############################################################################
 
