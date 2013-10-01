@@ -83,6 +83,7 @@ def summarize_vimages(ppath, foldername):
     images_data = []
     datapath = os.path.join(ppath, foldername)
     validation_images = os.listdir(datapath) #list of validation image names
+    validation_images.sort()
     for image_name in validation_images:
         image = misc.imread(datapath + "/" + image_name)
         image_features = obtain_features(image)
@@ -154,6 +155,9 @@ def best_feature_combo(images_data, X, Y, nfolds2, parameters2):
     """
     Find combination of features that produces highest score.
     """
+    #make sure this list matches the one constructed in the obtain_features function
+        #the order must also be identical
+    feature_names = np.array(["meanR", "meanG", "meanB", "stdR", "stdG", "stdB"])
     feature_choices = feature_combos(images_data) #list of 3-feature options
 
     best_combo = [0,0,0]
@@ -166,7 +170,9 @@ def best_feature_combo(images_data, X, Y, nfolds2, parameters2):
         if score > best_score:
             best_score = score
             best_combo = fcombo
+    
     print "Indices of most important 3 features: \n" , best_combo
+    print "Names of the most important 3 features: \n" , feature_names[np.array(best_combo)]
     print "Score obtained using just these features: \n" , best_score
 
 
@@ -231,7 +237,7 @@ def main():
 
     ### Use the pickled classifier to classify validation images ###
     vfolder = "validation_images" #name of folder containing images to classify
-    #run_final_classifier(vfolder)
+    run_final_classifier(vfolder)
 
     
 main()
