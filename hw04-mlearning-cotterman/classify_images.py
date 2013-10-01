@@ -15,14 +15,13 @@ from sklearn import grid_search
 from sklearn import metrics
 import pickle
 
-
 def get_ppath():
     """
     Assume this script is in same folder as the "50_categories" folder
     and assume the "50_categories" folder contains images
     in folders labeled according to category (e.g., "camel", "airplane", etc.).
     """
-    print ("This directory should contain script and folder of folders with images: ")
+    print ("\n This directory should contain script and folder of folders with images: ")
     ppath , file = os.path.split(os.path.realpath(__file__))
     print(ppath)
     return ppath
@@ -96,18 +95,18 @@ def examine_images_data(images_data):
     """
     Examine content and type of data stored in images_data.
     """
-    print "type(images_data): ", type(images_data) #we have a list
     print "number of images: " , len(images_data) #4244 images
     print "#features: " , len(images_data[0]) - 1 #each image has Xx features + category name
-    print "example of feature values: " , images_data[0] #list containing features and category for image 15
+    print "example of feature values: " , images_data[0] , "\n" #features and category for image 0
 
 
 def random_guessing(Y, categories):
     """
     Calculate expected value of loss function if we guessed randomly.
     """
-    print "Guess each category with equal probability: "
-    print "    Expected score (fraction of guesses that are correct): " , (float(len(Y))/len(categories))/len(Y)
+    print "Expected score (fraction of guesses that are correct)"
+    print "if we guess each category with equal probability: " , \
+            (float(len(Y))/len(categories))/len(Y) , "\n"
 
 
 def feature_combos(images_data):
@@ -128,8 +127,9 @@ def best_random_forest(X, Y, nfolds, parameters):
     Fit "best" random forest by using parameters that minimize loss function 
     (i.e., maximize the score)
     """
-    rf_tune = grid_search.GridSearchCV(RandomForestClassifier(), parameters,\
-                                       score_func=metrics.accuracy_score, n_jobs = 2, cv = nfolds)
+    njobs = 1 #number of jobs to run in parallel -- pickle problems may occur if njobs > 1
+    rf_tune = grid_search.GridSearchCV(RandomForestClassifier(), parameters,
+                                       score_func=metrics.zero_one_score, n_jobs = njobs, cv = nfolds)
     return rf_tune.fit(X, Y)
 
 def print_results(rf_opt):
@@ -138,10 +138,24 @@ def print_results(rf_opt):
     print("Optimal Model:\n" + str(rf_opt.best_estimator_) + "\n")
 
 
-def best_feature_combo(feature_choices, X, Y, nfolds2, parameters2):
+def build_classifier(X, Y, nfolds, parameters):
+    """
+    Build classifier using "best" random forest.
+    """
+    print "here1"
+    rf_opt = best_random_forest(X, Y, nfolds, parameters)
+    print_results(rf_opt) #Results of the grid search for optimal random forest parameters.
+    mypickledRF = open('RFClassifier' , 'wb') #w is for write; b is for binary
+    pickle.dump(rf_opt.best_estimator_ , mypickledRF) #Save classifier in file "RFclassifier"
+    mypickledRF.close()
+    print "here2"
+
+def best_feature_combo(images_data, X, Y, nfolds2, parameters2):
     """
     Find combination of features that produces highest score.
     """
+    feature_choices = feature_combos(images_data) #list of 3-feature options
+
     best_combo = [0,0,0]
     best_score = 0
     for fcombo in feature_choices:
@@ -156,12 +170,38 @@ def best_feature_combo(feature_choices, X, Y, nfolds2, parameters2):
     print "Score obtained using just these features: \n" , best_score
 
 
+def print_predicted(vNames, vY_predicted):
+    print "\n filename                   predicted_class            "
+    print "------------------------------------------------------"
+    for i in range(len(vNames)):
+        print vNames[i] , "             " , vY_predicted[i]
+    print "\n"
+
+
+def run_final_classifier(vfolder):
+    """
+    Use the pickled classifier to classify validation images.
+    Pickled classifier runs random forest using parameters
+    deemed to be optimal from a cross-validated grid search
+    with provided training images.
+    """
+    ppath , file = os.path.split(os.path.realpath(__file__))
+    vimages_data = summarize_vimages(ppath, vfolder) #narray of images features
+    vX = np.array([f[:-1] for f in vimages_data]) #just the features (X will be a list of lists)
+    vNames = np.array([c[-1] for c in vimages_data]) #list of image names
+
+    mypickledRF = open('RFClassifier' , 'rb') #r is for read; b is for binary
+    clf = pickle.load(mypickledRF)
+    vY_predicted = np.array(clf.predict(vX))
+
+    print_predicted(vNames, vY_predicted)
+
+
 ###############################################################################
 
 def main():
     
-    ### obtain image information (e.g., calculate features) ###
-
+    ### Obtain image information (e.g., calculate features) ###
     ppath = get_ppath() #path of folder containing images
     foldername = "50_categories" #name of folder containing training images
     categories = get_categories(ppath, foldername) #list of image categories
@@ -170,57 +210,39 @@ def main():
     X = np.array([f[:-1] for f in images_data]) #just the features (X will be a list of lists)
     Y = np.array([c[-1] for c in images_data]) #list of categories
 
-    random_guessing(Y, categories) #Expected score if guessing category randomly 
+
+    ### Calculate expected score if guessing category randomly#
+    random_guessing(Y, categories)  
 
 
-    ### build classifier using "best" random forest ###
-
+    ### Build classifier using "best" random forest ###
     nfolds = 3 #number of folds to use for cross-validation
+    #n_estimators is number of trees in forest
+    #max_features is the number of features to consider when looking for best split
     parameters = {'n_estimators':[5],  'max_features':[5]} # rf parameters to try
-        #n_estimators is number of trees in forest
-        #max_features is the number of features to consider when looking for best split
-    rf_opt = best_random_forest(X, Y, nfolds, parameters)
-    print_results(rf_opt) #Results of the grid search for optimal random forest parameters.
-    RFclassifier = pickle.dumps(rf_opt.best_estimator_) #Save classifier in file "RFclassifier"
+    build_classifier(X, Y, nfolds, parameters)
 
 
-    ### What are the 3 most important features? Test 455 combos (455 = 15 choose 3) ###
-  
-    feature_choices = feature_combos(images_data) #list of 3-feature options
+    ### Find the 3 most important features? Test 455 combos (455 = 15 choose 3) ###
     nfolds2 = 3
     parameters2 = {'n_estimators':[5]} # rf parameters to try
-    #best_feature_combo(feature_choices, X, Y, nfolds2, parameters2)
+    best_feature_combo(images_data, X, Y, nfolds2, parameters2)
 
 
     ### Use the pickled classifier to classify validation images ###
     vfolder = "validation_images" #name of folder containing images to classify
-    vimages_data = summarize_vimages(ppath, vfolder) #narray of images features
-    vX = np.array([f[:-1] for f in vimages_data]) #just the features (X will be a list of lists)
-    vNames = np.array([c[-1] for c in vimages_data]) #list of image names
-    clf = pickle.loads(RFclassifier)
-    vY_predicted = np.array(clf.predict(vX))
-    print "\n filename                   predicted_class            "
-    print " ------------------------------------------------------"
-    for i in range(len(vX)):
-        print vNames[i] , "                   " , vY_predicted[i]
-    print "\n"
+    run_final_classifier(vfolder)
+
     
 main()
  
+
+#This if-statement says that if this script (classify_images.py) is run directly, then execute main.  
+    #Else, do not execute main (facilitates running "from classify_images import run_final_classifier")
+if __name__ == '__main__':
+    main()
 
 ###############################################################################
 
 
 
-# Make sure your final classifier can run on a directory of different images, where a call like:
-#   run_final_classifier("/new/directory/path/")
-#  on directory that contains files like:
-#    validation1.jpg
-#    validation2.jpg 
-#     ....
-#  will produce an output file that looks like:
-#    filename             predicted_class
-#    ------------------------------------------
-#    validation1.jpg          unicorn
-#    validation2.jpg          camel
-#     ....
