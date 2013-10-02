@@ -3,7 +3,7 @@
 ##### Guide for running programs for hw04 ####################################
 ##############################################################################
 
-#I assume the following folder structure:
+#To successfully run my script, you should have the following folder structure:
     #You are running python from the directory that contains classify_images.py
     #Your pwd also contains a folder called "50_categories" which contains the 
         training data
@@ -35,10 +35,13 @@ stdG :  Standard deviation of green channel.  (Or of single channel if only one 
 stdB :  Standard deviation of blue channel.  (Or of single channel if only one color value)
 
 
-#CV score using the optimal random forest classifier: 0.152686145146
+#CV score using the optimal random forest classifier: 
+0.152686145146
 
-#In comparison, the expected score from random guessing is 1/50 = .02
+#In comparison, the expected score from random guessing is:
+1/50 = .02
 
-#My 3 most important features: ['meanG', 'stdR', 'stdB']
+#My 3 most important features: 
+['meanG', 'stdR', 'stdB']
 
 
