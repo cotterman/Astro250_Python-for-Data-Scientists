@@ -322,7 +322,7 @@ def main():
 
     ### Find the 3 most important features? Test 455 combos (455 = 15 choose 3) ###
     nfolds2 = 3
-    parameters2 = {'n_estimators':[5]} # rf parameters to try
+    parameters2 = {'n_estimators':[5, 100]} # rf parameters to try
     best_feature_combo(images_data, X, Y, nfolds2, parameters2, feature_names)
 
 

@@ -316,7 +316,7 @@ def main():
     nfolds = 3 #number of folds to use for cross-validation
     #n_estimators is number of trees in forest
     #max_features is the number of features to consider when looking for best split
-    parameters = {'n_estimators':[50,100],  'max_features':[5,10]} # rf parameters to try
+    parameters = {'n_estimators':[50,100],  'max_features':[5,10,15,20]} # rf parameters to try
     build_classifier(X, Y, nfolds, parameters)
 
 
