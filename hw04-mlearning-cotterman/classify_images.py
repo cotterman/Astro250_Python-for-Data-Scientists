@@ -82,6 +82,7 @@ def get_textures(image):
     dissimilarity = skimage.feature.greycoprops(glcm, prop='dissimilarity')[0][0]
     homogeneity = skimage.feature.greycoprops(glcm, prop='homogeneity')[0][0]
     ASM = skimage.feature.greycoprops(glcm, prop='ASM')[0][0]
+
     return [contrast, dissimilarity, homogeneity, ASM]
 
 
@@ -134,8 +135,9 @@ def feature_descriptions(feature_names, printme):
         'blue_contrast': "blue contrast, based on the blue co-occurrence matrix using skimage.feature",
         'blue_dissimilarity': "blue dissimilarity, based on the blue co-occurrence matrix using skimage.feature",
         'blue_homogeneity': "blue homogeneity, based on the blue co-occurrence matrix using skimage.feature",
-        'blue_ASM': "blue ASM, based on the blue co-occurrence matrix using skimage.feature",
+        'blue_ASM': "blue ASM, based on the blue co-occurrence matrix using skimage.feature"
         }
+
     if printme==True:
         print "*** Features used for prediction ***"
         for feature in feature_names:
