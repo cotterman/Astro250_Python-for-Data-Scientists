@@ -31,7 +31,20 @@
     #another person can't use postgresql while I use mysql on the same DB
     #SQL code (mostly) will transfer, but if you change your mind in terms
         of whether you want to use PostgreSQL, MySQL, or SQLite then you will 
-        need to import data info into a new database with you desired DBMS  
+        need to import data info into a new database with you desired DBMS 
+
+#### SQL DETAILS ####
+
+#Table VIEW (versus CREATE):
+    #it's a waste of space to store all tables
+    #view is a reference to the query that I run which is not stored on disk
+    #disadvantage: it will re-run the query whenever it is referenced 
+        #so could slow things down if the takes a long time to run
+    #note: if underlying data (e.g., topair) changes, then so will the view
+    #another alternative with PostgreSQL: materialized view
+        #this will save the view on disk
+        #different from creating table in that the materialized view
+            #will be updated when underlying tables are updated 
 
 
 #### WAYS TO USE/ACCESS A DATABASE ####
