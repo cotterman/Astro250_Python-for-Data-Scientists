@@ -1,0 +1,43 @@
+
+##############################################################################
+# Overview: Create a database to analyze historical weather data
+#    and discovery the relationships between major cities.
+# Author: Carolyn Cotterman
+##############################################################################
+
+
+
+
+### 1) Create a table of the 50 most travelled airports in the US ### 
+#include relevant information such as name, city, ICAO airport code, latitude, and longitude.
+
+#Read in the following data into a database 
+    #top_airports.csv contains a list of the 50 most travelled airports in US
+        #Fields: City,FAA,IATA,ICAO,Airport,Role,Enplanements
+    #ICAO_airports.csv (7 Mb) is a list of 43000+ airports with fields:                  
+        #"id","ident","type","name","latitude_deg","longitude_deg",         
+        #"elevation_ft","continent","iso_country","iso_region",
+        #"municipality","scheduled_service","gps_code","iata_code",
+        #"local_code","home_link","wikipedia_link","keywords"
+    #match using "iata_code" from ICAO_airports and "IATA" from top_airports
+
+#join the tables together to create table
+
+
+### 2) Build another table that will hold historical weather info ###
+    #include min/max temperature, humidity, precipitation, and cloud cover
+
+
+### 3) Grab historical data from weather underground from 2008 until now ###
+    #populate your tables accordingly
+
+
+### 4) For each pair of cities/airports determine how the daily change of 
+    #high temperature and cloud cover from one city predicts the daily change 
+    #of the other city 1,3, & 7 days in advance ###
+
+
+### 5) Plot the correlation strengths for the 10 top pairs ###
+    #for all three dates, for both temperature and cloud cover 
+    #as a function of distance. Also make a plot as a function of longitude difference. 
+    #What trends do you see?
