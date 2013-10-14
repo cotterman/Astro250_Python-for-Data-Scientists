@@ -201,6 +201,7 @@ def build_weather_table(test):
     cursor.close() #this seems to not have a purpose (??)
     connection.commit()
     
+
 def grab_weather_data():
     """
     Obtain daily weather info for top 50 airports by looking up 
@@ -230,7 +231,6 @@ def main():
     ### 3) Grab historical data from weather underground from 2008 until now ###
         #populate your tables accordingly
     grab_weather_data()
-
 
     ### 4) For each pair of cities/airports determine how the daily change of 
         #high temperature and cloud cover from one city predicts the daily change 

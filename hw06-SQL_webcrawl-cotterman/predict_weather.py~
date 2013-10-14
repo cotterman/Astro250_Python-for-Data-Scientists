@@ -231,7 +231,6 @@ def main():
         #populate your tables accordingly
     grab_weather_data()
 
-
     ### 4) For each pair of cities/airports determine how the daily change of 
         #high temperature and cloud cover from one city predicts the daily change 
         #of the other city 1,3, & 7 days in advance ###
