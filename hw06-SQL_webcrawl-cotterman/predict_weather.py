@@ -33,6 +33,7 @@ for airport in topair_data:
     data = (airport_city, airport_code, airport_name)
     sql_cmd = ("INSERT INTO topair (city, IATA, airport_name) VALUES " + str(data))
     cursor.execute(sql_cmd)
+connection.commit()
 
 #test
 sql_cmd = """SELECT city, airport_name FROM topair WHERE IATA == 'LAX' """
@@ -66,6 +67,7 @@ for row in range(airinfo_df.shape[0]):
         data = (latitude, longitude, elevation, iata_code)
         sql_cmd = ("INSERT INTO airinfo (latitude, longitude, elevation, iata_code) VALUES " + str(data))
         cursor.execute(sql_cmd)
+connection.commit()
 
 #test
 sql_cmd = """SELECT iata_code, latitude, longitude, elevation FROM airinfo WHERE iata_code == 'LAX' """
@@ -75,6 +77,39 @@ print db_info
 
 #join the tables together to create table
     #match using "iata_code" from ICAO_airports and "IATA" from top_airports
+#join the tables together
+connection = sqlite3.connect("weather.db")
+cursor = connection.cursor()
+
+#it's a waste of space to store all tables
+#view is a reference to the query that I run which is not stored on disk
+#disadvantage: it will re-run the query whenever it is referenced 
+    #so could slow things down if the takes a long time to run
+#note: if underlying data (e.g., topair) changes, then so will the view
+#another alternative with PostgreSQL: materialized view
+    #this will save the view on disk
+    #different from creating table in that the materialized view
+        #will be updated when underlying tables are updated
+        
+sql_cmd = """
+    CREATE VIEW IF NOT EXISTS airports AS 
+    SELECT topair.IATA, topair.city, topair.airport_name, 
+           airinfo.latitude, airinfo.longitude, airinfo.elevation
+    FROM topair 
+    INNER JOIN airinfo ON topair.IATA = airinfo.iata_code 
+"""
+cursor.execute(sql_cmd)
+
+#check
+sql_cmd = """
+    SELECT *
+    FROM airports LIMIT 10;
+"""
+cursor.execute(sql_cmd)
+print cursor.fetchall()
+
+connection.commit()
+
 
 
 ### 2) Build another table that will hold historical weather info ###
