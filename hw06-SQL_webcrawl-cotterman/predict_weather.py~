@@ -107,7 +107,7 @@ def get_top_airports(airport_list, test):
         db_info = array(cursor.fetchall())
         print db_info
 
-def get_top_airport_info():
+def get_top_airport_info(test):
     """
     Join the airport_info table with the airport_list table
         Match using IATA code
@@ -134,6 +134,7 @@ def get_top_airport_info():
         cursor.execute(sql_cmd)
         print cursor.fetchall()
 
+    cursor.close()
     connection.commit()
 
 
@@ -150,6 +151,51 @@ def get_airports(airport_info, airport_list):
     get_top_airport_info(test=True)
 
 
+def build_weather_table(test):
+    """
+    Build another table that will hold historical weather
+    information, such as min/max temperature, humidity,
+    precipitation, and cloud cover
+    """
+
+    connection = sqlite3.connect("weather.db")
+    cursor = connection.cursor()
+
+    sql_cmd = """
+    DROP TABLE weatherD;
+    """
+    try: cursor.execute(sql_cmd)
+    except Exception: pass
+
+    sql_cmd = """
+    CREATE TABLE weatherD (
+        iata_code TEXT,
+        celcius_min FLOAT, 
+        celcius_max FLOAT, 
+        humidity FLOAT, 
+        precipitation FLOAT,
+        cloud_cover FLOAT);
+    """
+    cursor.execute(sql_cmd)
+
+    if test:
+        #to find out what a database contains:
+        sql_cmd = """SELECT name FROM sqlite_master
+            WHERE type='table' OR type='view'
+            ORDER BY name;"""
+
+        #note: the with syntax is good practice, as it will close the connection
+            #regardless of whether the code ends prematurely with an error
+        with sqlite3.connect("weather.db") as connection:
+            cursor = connection.cursor()
+            cursor.execute(sql_cmd)
+            db_info = array(cursor.fetchall())
+            print db_info
+    
+    cursor.close() #this seems to not have a purpose (??)
+    connection.commit()
+    
+
 ##############################################################################
 
 
@@ -160,7 +206,7 @@ def main():
 
     ### 2) Build another table that will hold historical weather info ###
         #include min/max temperature, humidity, precipitation, and cloud cover
-
+    build_weather_table(test=True)
 
     ### 3) Grab historical data from weather underground from 2008 until now ###
         #populate your tables accordingly
