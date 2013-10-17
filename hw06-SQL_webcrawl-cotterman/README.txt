@@ -3,12 +3,34 @@
 ##############################################################################
 
 #The program of interest is "predict_weather.py"
+
 #You must have installed sqlite3 and matplotlib to run this code.
 #You must also have a subfolder in your pwd called "hw_6_data"
     #this folder should contain ICAO_airports.csv and top_airports.csv
-#My code will create subfolder within the "hw_6_data" subfolder 
+#Code will create subfolder within the "hw_6_data" subfolder 
     called "MyDownloadedData" if it doesn't already exist
-    #My code place the downloaded csv files in here
+    #Code place the downloaded csv files in here
+#I was able to execute all components of this problem for 
+    the first 10 airports listed in the "top 50" file.
+    #Unfortunately, when I moved to running for all top 50, I got errors.
+    #Errors are probably due to some idiosyncracies of certain downloaded 
+        data files and I unfortunately ran out of time to trouble-shoot.
+    #Therefore, my results might look a bit funny.
+#If you wish to run my code for testing purposes, I would recommend
+    keeping the function build_weather_table and grab_weather_data commented out
+    since it will take a while to redownload the data
+    and you can just use what's already in "MyDownloadedData" folder
+
+RESULTS:
+    #please find the requested graphs, produced by "predict_weather.py":
+        #tempF_max_Distances.pdf
+        #tempF_max_longitude_diffs.pdf 
+        #cloud_cover_Distances.pdf
+        #cloud_cover_longitude_diffs.pdf       
+    #As expected, the correlations are strongest for smaller lags (i.e., 1 day)
+    #I also expected correlations to be strongest for airports closest together
+        #But due to limited data, this trend is not obvious.
+
 
 
 ###############################################################################

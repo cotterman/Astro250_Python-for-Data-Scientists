@@ -466,6 +466,9 @@ def corr_changes(top_airports, gaps, variable):
 
 
 def plot_corrs(mydata, dmeasure, var):
+    """
+    Make requested plots!
+    """
 
     fig, ax = plt.subplots()  
 
