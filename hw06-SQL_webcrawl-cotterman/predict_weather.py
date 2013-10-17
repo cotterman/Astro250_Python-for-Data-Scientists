@@ -21,6 +21,8 @@ import math
 import scipy
 from scipy.stats.stats import pearsonr
 
+import matplotlib.pyplot as plt
+
 # pip install beautifulsoup4
 #from bs4 import BeautifulSoup #I ended up not using this
 
@@ -371,13 +373,29 @@ def grab_weather_data(top_airports, download, start_yr, end_yr, run_checks):
         check_weatherD() #check what weatherD table contains        
   
 
+def find_distance(lat1, lon1, lat2, lon2):
+    """
+    Given latitudes and longitudes, calculate approximate distance
+    (in km) between two points. Code found online.
+    """
+
+    radius = 6371 # km
+
+    dlat = math.radians(lat2-lat1)
+    dlon = math.radians(lon2-lon1)
+    a = math.sin(dlat/2) * math.sin(dlat/2) + math.cos(math.radians(lat1)) \
+        * math.cos(math.radians(lat2)) * math.sin(dlon/2) * math.sin(dlon/2)
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    d = radius * c
+
+    return d
+
+
 def corr_changes(top_airports, gaps, variable):
     """For each pair of cities/airports determine how the daily change of 
         #high temperature and cloud cover from one city predicts the daily change 
         #of the other city 1,3, & 7 days in advance ###
     """
-    #Note: Cloud cover from the Weather Underground tables ranges from 
-        #0 (clear) to 8 (completely cloudy)
     
     cursor = connection.cursor()
 
@@ -415,9 +433,43 @@ def corr_changes(top_airports, gaps, variable):
             mycol = "Day_lag" + str(gap)
             corr = pearsonr(changesDF[airport1][gap:], changesDF[airport2][:-gap])[0]
             mycorrs[mycol][myrow] = corr
+
+    #obtain info on distance between airports
+    longitude_diffs = []
+    distances = []
+    for myrow, aircombo in enumerate(aircombos):
+
+        sql_cmd = "SELECT longitude FROM airinfo WHERE iata_code='" + aircombo[0] + "'"
+        cursor.execute(sql_cmd)
+        longitude0 = cursor.fetchall()[0][0] 
+        sql_cmd = "SELECT longitude FROM airinfo WHERE iata_code='" + aircombo[1] + "'"
+        cursor.execute(sql_cmd)
+        longitude1 = cursor.fetchall()[0][0] 
+        longitude_diff = abs(longitude1 - longitude0)
+        longitude_diffs.append(longitude_diff)
+
+        sql_cmd = "SELECT latitude FROM airinfo WHERE iata_code='" + aircombo[0] + "'"
+        cursor.execute(sql_cmd)
+        latitude0 = cursor.fetchall()[0][0] 
+        sql_cmd = "SELECT latitude FROM airinfo WHERE iata_code='" + aircombo[1] + "'"
+        cursor.execute(sql_cmd)
+        latitude1 = cursor.fetchall()[0][0] 
+        distance = find_distance(latitude0, longitude0, latitude1, longitude1)
+        distances.append(distance)
+        
+    mycorrs['Distances'] = distances
+    mycorrs['longitude_diffs'] = longitude_diffs
+
     print "For " , variable , "\n" , mycorrs, "\n"
     return mycorrs        
 
+
+def plot_corrs(corr_tempF_max, distance):
+
+    #f, ax = plt.subplots()
+    #ax.plot(x, y)
+    #ax.set_title('Simple plot')
+    
 
 ##############################################################################
 
@@ -439,21 +491,24 @@ def main():
 
     ### 2) Build another table that will hold historical weather info ###
         #include min/max temperature, humidity, precipitation, and cloud cover
-    #build_weather_table(test=True)
+    build_weather_table(test=True)
 
     ### 3) Grab historical data from weather underground from 2008 until now ###
         #populate table accordingly
-    #grab_weather_data(top_airports[:3], True, 2012, 2013, True)
+    grab_weather_data(top_airports[:10], True, 2012, 2013, True)
 
     ### 4) For each pair of cities/airports determine how the daily changes in
         #one city predicts the daily change of the other city ###
-    corr_tempF_max = corr_changes(top_airports[:3], gaps=[1,3,7], variable='tempF_max')
-    corr_cloud_cover = corr_changes(top_airports[:3], gaps=[1,3,7], variable='cloud_cover')
+        #Also, add info on distance between cities to dataframe
+    corr_tempF_max = corr_changes(top_airports[:10], gaps=[1,3,7], variable='tempF_max')
+    corr_cloud_cover = corr_changes(top_airports[:10], gaps=[1,3,7], variable='cloud_cover')
 
     ### 5) Plot the correlation strengths for the 10 top pairs ###
         #for all three dates, for both temperature and cloud cover 
         #as a function of distance. Also make a plot as a function of longitude difference. 
         #What trends do you see?
+    plot_corrs(corr_tempF_max, distance)
+    plot_corrs(corr_cloud_cover, distance)
 
 main()
 
