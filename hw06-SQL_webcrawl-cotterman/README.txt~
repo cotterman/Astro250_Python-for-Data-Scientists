@@ -16,6 +16,10 @@
     #Errors are probably due to some idiosyncracies of certain downloaded 
         data files and I unfortunately ran out of time to trouble-shoot.
     #Therefore, my results might look a bit funny.
+#If you wish to run my code for testing purposes, I would recommend
+    keeping the function build_weather_table and grab_weather_data commented out
+    since it will take a while to redownload the data
+    and you can just use what's already in "MyDownloadedData" folder
 
 RESULTS:
     #please find the requested graphs, produced by "predict_weather.py":

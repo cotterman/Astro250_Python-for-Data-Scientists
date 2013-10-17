@@ -9,7 +9,7 @@
     #this folder should contain ICAO_airports.csv and top_airports.csv
 #Code will create subfolder within the "hw_6_data" subfolder 
     called "MyDownloadedData" if it doesn't already exist
-    #Code place the downloaded csv files in here
+    #Code places the downloaded csv files in here
 #I was able to execute all components of this problem for 
     the first 10 airports listed in the "top 50" file.
     #Unfortunately, when I moved to running for all top 50, I got errors.
