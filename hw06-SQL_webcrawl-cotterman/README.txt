@@ -2,7 +2,7 @@
 ################## Notes on running code #####################################
 ##############################################################################
 
-
+You must have installed pyscopg2 and urllib2 to run my code.
 
 
 ###############################################################################
@@ -27,6 +27,12 @@
         #should not use (only inferior to PostgreSQL)
     #SQLite
         #good for small data (see below)
+    #Note: while SQL is the underlying language for the above DBMSs, 
+        the functions available while working with any of them do differ.
+        Ex:  I couldn't figure out how to do basic stuff like correlations
+            or even square roots with sqlite (??)  PostgreSQL, in contrast,
+            has a module which allows access to virually all of R's library
+            of functions.
 #A database is like a structure or a folder and comes with an associated DBMS 
     #another person can't use postgresql while I use mysql on the same DB
     #SQL code (mostly) will transfer, but if you change your mind in terms
@@ -60,8 +66,11 @@
         #allows for interaction with a MySQL database
     #PyGreSQL
         #allows for interaction with PostgreSQL database
-        #there are many alternatives (e.g., pg8000)
-        
+        #there are many alternative packages (e.g., pg8000, pyscopg2)
+        #note: it is cumbersome to setup a PostgreSQL database, which is necessary
+            for using PyGreSQL.  But, if you know someone amazing who will
+            set one up for you, then using it with PyGreSQL is just like using sqlite
+            (but with access to more built-in libraries/ functions)        
 
 ## From within the database itself:
     #psql

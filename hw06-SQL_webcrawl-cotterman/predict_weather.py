@@ -5,16 +5,20 @@
 # Author: Carolyn Cotterman
 ##############################################################################
 
-import sqlite3
+import sqlite3 #I ended up not using this
 import urllib2
 import os
 import pandas as pd
+#import psycopg2 #sudo aptitude install pyscopg2
 
-import numpy
+import numpy as np
 from numpy import loadtxt, array
 
+import scipy
+from scipy.stats.stats import pearsonr
+
 # pip install beautifulsoup4
-from bs4 import BeautifulSoup
+#from bs4 import BeautifulSoup #I ended up not using this
 
 ##############################################################################
 
@@ -38,12 +42,14 @@ def get_airport_info(airport_info, test):
     sql_cmd = """
     DROP TABLE airinfo;
     """
-    try: cursor.execute(sql_cmd)
-    except Exception: pass
-
+    try: 
+        cursor.execute(sql_cmd)
+    except Exception, inst:
+        print "Caught Exception: ", inst
+        connection.rollback() 
+    
     sql_cmd = """
     CREATE TABLE airinfo (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
         latitude FLOAT, 
         longitude FLOAT, 
         elevation FLOAT, 
@@ -94,8 +100,7 @@ def get_top_airports(airport_list, test):
 
     top_airports = [] #list to contain IATA codes of top 50 airports
 
-    sql_cmd = """CREATE TABLE topair (id INTEGER PRIMARY KEY AUTOINCREMENT,
-        city TEXT, IATA TEXT, airport_name TEXT)"""
+    sql_cmd = """CREATE TABLE topair (city TEXT, IATA TEXT, airport_name TEXT)"""
     cursor.execute(sql_cmd)
     for airport in topair_data:
         top_airports.append(airport[2])
@@ -197,16 +202,12 @@ def build_weather_table(test):
         sql_cmd = """SELECT name FROM sqlite_master
             WHERE type='table' OR type='view'
             ORDER BY name;"""
-
-        #note: the with syntax is good practice, as it will close the connection
-            #regardless of whether the code ends prematurely with an error
-        with sqlite3.connect("weather.db") as connection:
-            cursor = connection.cursor()
-            cursor.execute(sql_cmd)
-            db_info = array(cursor.fetchall())
-            print "Tables in weather.db: " , db_info
+        cursor = connection.cursor()
+        cursor.execute(sql_cmd)
+        db_info = cursor.fetchall()
+        print "Tables in weather.db: " , db_info
     
-    cursor.close() #this seems to not have a purpose (??)
+    cursor.close() #this seems to not have a purpose
     connection.commit()
 
     
@@ -366,7 +367,7 @@ def grab_weather_data(top_airports, download, start_yr, end_yr, run_checks):
         check_weatherD() #check what weatherD table contains        
 
 
-def corr_changes(top_airports, gap):
+def corr_changes(top_airports, gaps, variable):
     """For each pair of cities/airports determine how the daily change of 
         #high temperature and cloud cover from one city predicts the daily change 
         #of the other city 1,3, & 7 days in advance ###
@@ -374,19 +375,51 @@ def corr_changes(top_airports, gap):
     #Note: Cloud cover from the Weather Underground tables ranges from 
         #0 (clear) to 8 (completely cloudy)
     
-    #I assume it is more efficient to use SQL's corr function rather than
-        #writing out a correlation formula(??)
+    cursor = connection.cursor()
 
-    pass
+    #for airport_pair in top_airports:
+    airport1 = "ATL"
+    airport2 = "ORD"
+
+    #get required data from tables
+    sql_cmd = "SELECT " + variable + " FROM weatherD WHERE iata_code='" + airport1 + "'"
+    print sql_cmd
+    cursor.execute(sql_cmd)
+    #materialize list before converting to array since arrays reallocate memory 
+        #everytime an element is added -- costly to add elements
+    data1 = np.array([ x[0] for x in cursor.fetchall() ]) 
+    print airport1, " has ", data1.shape[0], " non-missing " , variable , " values."
+
+    sql_cmd = "SELECT " + variable + " FROM weatherD WHERE iata_code='" + airport2 + "'"
+    print sql_cmd
+    cursor.execute(sql_cmd)
+    data2 = np.array([ x[0] for x in cursor.fetchall() ]) 
+    print airport2, " has ", data2.shape[0], " non-missing " , variable , " values."
+
+    #put daily changes in table
+    changesDF = pd.DataFrame(index=range(data1.shape[0]-1), columns=[airport1, airport2])
+    changesDF[airport1] = data1[1:] - data1[:-1]
+    changesDF[airport2] = data2[1:] - data2[:-1]
+    print "Data: " , data1[:10]
+    print "Changes: " , changesDF[airport1][:10]
+
+    #find pearson's correlation coefficient
+    #for gap in gaps:
+    corr = pearsonr(changesDF[airport1], changesDF[airport2])[0]
+
 
 ##############################################################################
 
+#this will open up a SQLite database.  
+    #Just do this once  -- re-opening is costly and pointless
+connection = sqlite3.connect("weather.db")
+#this will open up the postgreSQL database
+    #note: anyone can connect to this database if they provide the 
+        #dbname, user, password, and host
+#connection = psycopg2.connect('dbname=carolyn user=carolyn password=cotterman host=wotan.lbl.gov')
+
 
 def main():
-
-    #in SQLite, this opens up the database.  
-        #Just do this once  -- re-opening is costly and pointless
-    connection = sqlite3.connect("weather.db") 
 
     ### 1) Create a table of the 50 most travelled airports in the US ### 
         #also, return list of 50 most travelled airports
@@ -395,15 +428,16 @@ def main():
 
     ### 2) Build another table that will hold historical weather info ###
         #include min/max temperature, humidity, precipitation, and cloud cover
-    build_weather_table(test=True)
+    #build_weather_table(test=True)
 
     ### 3) Grab historical data from weather underground from 2008 until now ###
         #populate table accordingly
-    grab_weather_data(top_airports[:2], False, 2012, 2013, True)
+    #grab_weather_data(top_airports[:2], False, 2012, 2013, True)
 
     ### 4) For each pair of cities/airports determine how the daily changes in
         #one city predicts the daily change of the other city ###
-    corr_changes(top_airports[:2], gap=[(1,3,7)])
+    corr_changes(top_airports[:2], gaps=[(1,3,7)], variable='tempF_max')
+    #corr_changes(top_airports[:2], gaps=[(1,3,7)], variable='cloud_cover')
 
     ### 5) Plot the correlation strengths for the 10 top pairs ###
         #for all three dates, for both temperature and cloud cover 
