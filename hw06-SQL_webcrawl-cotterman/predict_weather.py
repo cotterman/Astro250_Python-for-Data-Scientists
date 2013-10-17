@@ -14,6 +14,10 @@ import pandas as pd
 import numpy as np
 from numpy import loadtxt, array
 
+import itertools as it
+
+import math
+
 import scipy
 from scipy.stats.stats import pearsonr
 
@@ -365,7 +369,7 @@ def grab_weather_data(top_airports, download, start_yr, end_yr, run_checks):
 
     if run_checks:
         check_weatherD() #check what weatherD table contains        
-
+  
 
 def corr_changes(top_airports, gaps, variable):
     """For each pair of cities/airports determine how the daily change of 
@@ -377,35 +381,42 @@ def corr_changes(top_airports, gaps, variable):
     
     cursor = connection.cursor()
 
-    #for airport_pair in top_airports:
-    airport1 = "ATL"
-    airport2 = "ORD"
-
-    #get required data from tables
-    sql_cmd = "SELECT " + variable + " FROM weatherD WHERE iata_code='" + airport1 + "'"
-    print sql_cmd
+    #get number of days for which we have weather info
+    sql_cmd = "SELECT COUNT(DISTINCT date) FROM weatherD"
     cursor.execute(sql_cmd)
-    #materialize list before converting to array since arrays reallocate memory 
-        #everytime an element is added -- costly to add elements
-    data1 = np.array([ x[0] for x in cursor.fetchall() ]) 
-    print airport1, " has ", data1.shape[0], " non-missing " , variable , " values."
+    day_count = cursor.fetchall()[0][0] 
+    #print "# of days worth of data: " , day_count
 
-    sql_cmd = "SELECT " + variable + " FROM weatherD WHERE iata_code='" + airport2 + "'"
-    print sql_cmd
-    cursor.execute(sql_cmd)
-    data2 = np.array([ x[0] for x in cursor.fetchall() ]) 
-    print airport2, " has ", data2.shape[0], " non-missing " , variable , " values."
+    #create dataframe to hold daily temperature changes
+    changesDF = pd.DataFrame(index=range(day_count-1), columns=top_airports)
 
-    #put daily changes in table
-    changesDF = pd.DataFrame(index=range(data1.shape[0]-1), columns=[airport1, airport2])
-    changesDF[airport1] = data1[1:] - data1[:-1]
-    changesDF[airport2] = data2[1:] - data2[:-1]
-    print "Data: " , data1[:10]
-    print "Changes: " , changesDF[airport1][:10]
+    for airport in top_airports:
 
-    #find pearson's correlation coefficient
-    #for gap in gaps:
-    corr = pearsonr(changesDF[airport1], changesDF[airport2])[0]
+        #get required data from tables
+        sql_cmd = "SELECT " + variable + " FROM weatherD WHERE iata_code='" + airport + "'"
+        cursor.execute(sql_cmd)
+        #materialize list before converting to array since arrays reallocate memory 
+            #everytime an element is added -- costly to add elements
+        data = np.array([ x[0] for x in cursor.fetchall() ]) 
+        #print airport, " has ", data.shape[0], " non-missing " , variable , " values."
+
+        #put daily changes in table
+        changesDF[airport] = data[1:] - data[:-1]
+
+
+    #create dataframe to hold pearson's correlation coefficients
+    aircombos = list(it.combinations(top_airports, 2))
+    mycorrs = pd.DataFrame(index=aircombos, columns=["Day_lag"+str(a) for a in gaps])
+
+    for gap in gaps:
+        for myrow, aircombo in enumerate(aircombos):
+            airport1 = aircombo[0]
+            airport2 = aircombo[1]
+            mycol = "Day_lag" + str(gap)
+            corr = pearsonr(changesDF[airport1][gap:], changesDF[airport2][:-gap])[0]
+            mycorrs[mycol][myrow] = corr
+    print "For " , variable , "\n" , mycorrs, "\n"
+    return mycorrs        
 
 
 ##############################################################################
@@ -432,12 +443,12 @@ def main():
 
     ### 3) Grab historical data from weather underground from 2008 until now ###
         #populate table accordingly
-    #grab_weather_data(top_airports[:2], False, 2012, 2013, True)
+    #grab_weather_data(top_airports[:3], True, 2012, 2013, True)
 
     ### 4) For each pair of cities/airports determine how the daily changes in
         #one city predicts the daily change of the other city ###
-    corr_changes(top_airports[:2], gaps=[(1,3,7)], variable='tempF_max')
-    #corr_changes(top_airports[:2], gaps=[(1,3,7)], variable='cloud_cover')
+    corr_tempF_max = corr_changes(top_airports[:3], gaps=[1,3,7], variable='tempF_max')
+    corr_cloud_cover = corr_changes(top_airports[:3], gaps=[1,3,7], variable='cloud_cover')
 
     ### 5) Plot the correlation strengths for the 10 top pairs ###
         #for all three dates, for both temperature and cloud cover 
