@@ -464,11 +464,46 @@ def corr_changes(top_airports, gaps, variable):
     return mycorrs        
 
 
-def plot_corrs(corr_tempF_max, distance):
 
-    f, ax = plt.subplots()
-    ax.plot(x, y)
-    ax.set_title('Simple plot')
+def plot_corrs(mydata, dmeasure, var):
+
+    fig, ax = plt.subplots()  
+
+    if var == "tempF_max":
+        mytitle1 = "Max Temperature"
+        myylab = "Pearsons correlation for changes in Max Temp (F)"
+    elif var=="cloud_cover":
+        mytitle1 = "Cloud Cover"
+        myylab = "Pearsons correlation for changes in Cloud Cover (8-point scale)"
+
+    if dmeasure=="Distances":
+        mytitle2 = "Distance"
+        myxlab = "distance apart (km)"
+    elif dmeasure=="longitude_diffs":
+        mytitle2 = "Longitude-Differences"
+        myxlab = "longitude difference (degrees)"
+
+    title_string = "Correlations for Changes in " + mytitle1 + " and " + mytitle2
+    ax.set_title(title_string)     
+    ax.set_xlabel(myxlab)             
+    ax.set_ylabel(myylab)
+
+    #use observations for which correlation is greatest
+    top10_lag1 = mydata.sort_index(by='Day_lag1', ascending=False)[:10]
+    #top10_lag1 = mydata
+    ax.scatter(x=top10_lag1[dmeasure], y=top10_lag1['Day_lag1'], label='1 Day Lag', color="red")
+    top10_lag3 = mydata.sort_index(by='Day_lag3', ascending=False)[:10]
+    #top10_lag3 = mydata
+    ax.scatter(x=top10_lag3[dmeasure], y=top10_lag3['Day_lag3'], label='3 Day Lag', color="blue")
+    top10_lag7 = mydata.sort_index(by='Day_lag7', ascending=False)[:10]
+    #top10_lag7 = mydata
+    ax.scatter(x=top10_lag7[dmeasure], y=top10_lag7['Day_lag7'], label='7 Day Lag', color="green")
+    ax.legend()
+
+    #save plot
+    plotname = var + "_" + dmeasure + ".pdf"
+    plt.savefig(plotname)
+
     
 
 ##############################################################################
@@ -491,11 +526,11 @@ def main():
 
     ### 2) Build another table that will hold historical weather info ###
         #include min/max temperature, humidity, precipitation, and cloud cover
-    build_weather_table(test=True)
+    #build_weather_table(test=True)
 
     ### 3) Grab historical data from weather underground from 2008 until now ###
         #populate table accordingly
-    grab_weather_data(top_airports[:10], True, 2012, 2013, True)
+    #grab_weather_data(top_airports[:10], download=False, start_yr=2008, end_yr=2013, run_checks=False)
 
     ### 4) For each pair of cities/airports determine how the daily changes in
         #one city predicts the daily change of the other city ###
@@ -507,8 +542,10 @@ def main():
         #for all three dates, for both temperature and cloud cover 
         #as a function of distance. Also make a plot as a function of longitude difference. 
         #What trends do you see?
-    plot_corrs(corr_tempF_max, distance)
-    plot_corrs(corr_cloud_cover, distance)
+    plot_corrs(mydata = corr_tempF_max, dmeasure = "Distances", var="tempF_max")
+    plot_corrs(mydata = corr_tempF_max, dmeasure = "longitude_diffs", var="tempF_max")
+    plot_corrs(mydata = corr_cloud_cover, dmeasure = "Distances", var="cloud_cover")
+    plot_corrs(mydata = corr_cloud_cover, dmeasure = "longitude_diffs", var="cloud_cover")
 
 main()
 

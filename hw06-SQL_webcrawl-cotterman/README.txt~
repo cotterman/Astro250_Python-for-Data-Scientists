@@ -2,7 +2,8 @@
 ################## Notes on running code #####################################
 ##############################################################################
 
-You must have installed pyscopg2 to run my code.
+You must have installed sqlite3 and matplotlib to run my code.
+
 
 
 ###############################################################################

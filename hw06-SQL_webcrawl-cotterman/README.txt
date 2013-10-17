@@ -2,7 +2,13 @@
 ################## Notes on running code #####################################
 ##############################################################################
 
-You must have installed pyscopg2 and urllib2 to run my code.
+#The program of interest is "predict_weather.py"
+#You must have installed sqlite3 and matplotlib to run this code.
+#You must also have a subfolder in your pwd called "hw_6_data"
+    #this folder should contain ICAO_airports.csv and top_airports.csv
+#My code will create subfolder within the "hw_6_data" subfolder 
+    called "MyDownloadedData" if it doesn't already exist
+    #My code place the downloaded csv files in here
 
 
 ###############################################################################
