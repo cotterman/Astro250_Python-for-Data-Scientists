@@ -22,7 +22,7 @@ def main():
     #1) Make a DataFrame with one row per issue with the following columns extracted
         #from the issue data: ntitle, created_at, labels, closed_at, user, id
     mydf = pd.DataFrame(index=range(len(myfile)), 
-        columns=['title', 'created_at', 'labels', 'closed_at', 'user', 'id'])
+        columns=['title', 'created_at', 'labels', 'closed_at', 'user', 'id', 'strptime','parse','to_datetime'])
     for counter, element in enumerate(myfile):
         mydf.title[counter] = myfile[counter]['title'] 
         mydf.created_at[counter] = myfile[counter]['created_at'] 
@@ -39,14 +39,17 @@ def main():
     print "Number of rows before dropping duplicates: " , mydf.shape[0], "\n"
     dedup = mydf.drop_duplicates(['id'])
     print "Number of rows after dropping duplicates: " , dedup.shape[0], "\n"
+    #keep in mind that indices of dedup are not sequential from 0 to dedup.shape[0]
 
 
     #3,4) Convert the created_at and closed_at columns from string to datetime type.
         #current fomat looks like this: 2010-09-29T00:45:31Z
-    dedup['strptime'] = datetime.strptime(dedup['created_at'], '%Y-%m-%d %H:%M:%S')
-    dedup['parse'] = parse(dedup['created_at'])
-    dedup['to_datetime'] = pd.to_datetime(dedup['created_at'])
-    print dedup.ix[:5]
+    for counter in list(dedup.index):
+        dedup.ix[counter]['created_at'] = datetime.strptime(dedup.ix[counter]['created_at'], '%Y-%m-%dT%H:%M:%SZ')
+        #these methods also work
+            #dedup.ix[counter]['created_at'] = parse(dedup.ix[counter]['created_at'])
+            #dedup.ix[counter]['created_at'] = pd.to_datetime(dedup.ix[counter]['created_at'])
+
 
     #5) Now construct appropriate time series and pandas functions to make the
         #following plots:
