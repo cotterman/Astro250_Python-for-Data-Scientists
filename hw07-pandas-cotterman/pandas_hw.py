@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 import pprint
 import json
+from datetime import datetime
+from dateutil.parser import parse
 
 
 def main():
@@ -37,11 +39,14 @@ def main():
     print "Number of rows before dropping duplicates: " , mydf.shape[0], "\n"
     dedup = mydf.drop_duplicates(['id'])
     print "Number of rows after dropping duplicates: " , dedup.shape[0], "\n"
+
+
+    #3,4) Convert the created_at and closed_at columns from string to datetime type.
+        #current fomat looks like this: 2010-09-29T00:45:31Z
+    dedup['strptime'] = datetime.strptime(dedup['created_at'], '%Y-%m-%d %H:%M:%S')
+    dedup['parse'] = parse(dedup['created_at'])
+    dedup['to_datetime'] = pd.to_datetime(dedup['created_at'])
     print dedup.ix[:5]
-
-
-    #4) Convert the created_at and closed_at columns from string to datetime type.
-    
 
     #5) Now construct appropriate time series and pandas functions to make the
         #following plots:
