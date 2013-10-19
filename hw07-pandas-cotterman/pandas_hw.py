@@ -14,11 +14,8 @@ def main():
     #that were made on it in the 'comments' field.
 
     myfile = json.load(open("closed.json", "r"))
-    #check out the first 2 item2
-    for counter, element in enumerate(myfile):
-        if counter<2:
-            print element
-            print "\n"
+    #check out the first 5 items
+    #pprint.pprint(myfile[:5])
  
     #1) Make a DataFrame with one row per issue with the following columns extracted
         #from the issue data: ntitle, created_at, labels, closed_at, user, id
@@ -29,19 +26,22 @@ def main():
         mydf.created_at[counter] = myfile[counter]['created_at'] 
         mydf.labels[counter] = myfile[counter]['labels'] 
         mydf.closed_at[counter] = myfile[counter]['closed_at'] 
-        mydf.user[counter] = myfile[counter]['user'] 
+        #Transform the user values to be simply the 'login' string, so that the user
+        #column contains only string usernames.
+        mydf.user[counter] = myfile[counter]['user']['login']
         mydf.id[counter] = myfile[counter]['id'] 
-    #Transform the user values to be simply the 'login' string, so that the user
-    #column contains only string usernames.
-    #for counter, element in enumerate(myfile):
-        #mydf.user[counter] = myfile[counter]['login'] #why does this not work?
-    print mydf.ix[:5]
-
+    print mydf.ix[:5] , "\n"
 
     #2) Remove duplicate rows by id from the DataFrame you just created using the id
         #column's duplicated method.
+    print "Number of rows before dropping duplicates: " , mydf.shape[0], "\n"
+    dedup = mydf.drop_duplicates(['id'])
+    print "Number of rows after dropping duplicates: " , dedup.shape[0], "\n"
+    print dedup.ix[:5]
+
 
     #4) Convert the created_at and closed_at columns from string to datetime type.
+    
 
     #5) Now construct appropriate time series and pandas functions to make the
         #following plots:
