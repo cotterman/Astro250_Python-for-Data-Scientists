@@ -1,15 +1,15 @@
 
 ##############################################################################
 # Overview: Create a database to analyze historical weather data
-#    and discovery the relationships between major cities.
+#    and discover the relationships between major cities.
 # Author: Carolyn Cotterman
 ##############################################################################
 
-import sqlite3 #I ended up not using this
+import sqlite3 #I ended up using this
 import urllib2
 import os
 import pandas as pd
-#import psycopg2 #sudo aptitude install pyscopg2
+#import psycopg2 #sudo aptitude install pyscopg2 (ended up not using this)
 
 import numpy as np
 from numpy import loadtxt, array
