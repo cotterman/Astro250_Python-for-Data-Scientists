@@ -22,7 +22,7 @@ def main():
     #1) Make a DataFrame with one row per issue with the following columns extracted
         #from the issue data: ntitle, created_at, labels, closed_at, user, id
     mydf = pd.DataFrame(index=range(len(myfile)), 
-        columns=['title', 'created_at', 'labels', 'closed_at', 'user', 'id', 'strptime','parse','to_datetime'])
+        columns=['title', 'created_at', 'labels', 'closed_at', 'user', 'id'])
     for counter, element in enumerate(myfile):
         mydf.title[counter] = myfile[counter]['title'] 
         mydf.created_at[counter] = myfile[counter]['created_at'] 
@@ -46,6 +46,7 @@ def main():
         #current fomat looks like this: 2010-09-29T00:45:31Z
     for counter in list(dedup.index):
         dedup.ix[counter]['created_at'] = datetime.strptime(dedup.ix[counter]['created_at'], '%Y-%m-%dT%H:%M:%SZ')
+        dedup.ix[counter]['closed_at'] = datetime.strptime(dedup.ix[counter]['closed_at'], '%Y-%m-%dT%H:%M:%SZ')
         #these methods also work
             #dedup.ix[counter]['created_at'] = parse(dedup.ix[counter]['created_at'])
             #dedup.ix[counter]['created_at'] = pd.to_datetime(dedup.ix[counter]['created_at'])
