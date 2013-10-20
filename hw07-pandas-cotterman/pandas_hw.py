@@ -6,16 +6,14 @@ import json
 from datetime import datetime
 from dateutil.parser import parse
 
-
-def main():
-
+def create_df(FileName):
     #Download a dump of data about closed GitHub issues for the pandas project here:
         #https://www.dropbox.com/s/pe6dqooznrfynii/closed.json
     #Use the built-in json library to read this file into memory. Each element in
     #the list contains information about a GitHub issue and all developer comments
     #that were made on it in the 'comments' field.
 
-    myfile = json.load(open("closed.json", "r"))
+    myfile = json.load(open(FileName, "r"))
     #check out the first 5 items
     #pprint.pprint(myfile[:5])
  
@@ -51,6 +49,12 @@ def main():
             #dedup.ix[counter]['created_at'] = parse(dedup.ix[counter]['created_at'])
             #dedup.ix[counter]['created_at'] = pd.to_datetime(dedup.ix[counter]['created_at'])
 
+
+def main():
+
+    #0 - 4) Create data from from supplied json file
+    datats = create_df(FileName="closed.json")
+    print dtats.ix[:5]
 
     #5) Now construct appropriate time series and pandas functions to make the
         #following plots:
