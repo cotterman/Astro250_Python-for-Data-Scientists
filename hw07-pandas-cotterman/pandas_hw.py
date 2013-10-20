@@ -49,12 +49,14 @@ def create_df(FileName):
             #dedup.ix[counter]['created_at'] = parse(dedup.ix[counter]['created_at'])
             #dedup.ix[counter]['created_at'] = pd.to_datetime(dedup.ix[counter]['created_at'])
 
+    return dedup
+
 
 def main():
 
     #0 - 4) Create data from from supplied json file
-    datats = create_df(FileName="closed.json")
-    print dtats.ix[:5]
+    ts = create_df(FileName="closed.json")
+    print ts.ix[:5]
 
     #5) Now construct appropriate time series and pandas functions to make the
         #following plots:
