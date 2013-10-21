@@ -5,8 +5,12 @@ import pprint
 import json
 from datetime import datetime
 from dateutil.parser import parse
+import matplotlib.pyplot as plt
 
 def create_df(FileName):
+    """
+    Create data from from downloaded json file.
+    """
     #Download a dump of data about closed GitHub issues for the pandas project here:
         #https://www.dropbox.com/s/pe6dqooznrfynii/closed.json
     #Use the built-in json library to read this file into memory. Each element in
@@ -52,6 +56,21 @@ def create_df(FileName):
     return dedup
 
 
+def plot_issues_per_month(tsdata):
+    issues_per_month = tsdata.resample('M', how='count') #number of observations (i.e., issues) per month
+    issues_per_month.plot(title="Number of issues created per month")
+    plt.savefig('Issues_per_month.pdf')
+
+
+def plot_users_per_month(tsdata):
+    dedup2 = tsdata.drop_duplicates(['user','created_at'])
+    print dedup2[:10]
+    users_per_month = dedup2.resample('M', how='count')
+    print users_per_month
+    users_per_month.plot(title="Number of distinct users creating issues each month")
+    plt.savefig('Users_per_month.pdf') #why do I also see issues_per_month?
+
+
 def main():
 
     #0 - 4) Create data from from supplied json file
@@ -61,11 +80,18 @@ def main():
     #5) Now construct appropriate time series and pandas functions to make the
         #following plots:
 
-    #Number of issues created by month
+    #create time series with index indicating monthly period
+    myts = pd.Series(np.array(ts["user"]), index=ts["created_at"])  
+    #print "time series: \n", myts[:5] 
+    myts2 = myts.to_period(freq='M') #convert to data with a monthly "period" index 
+    print myts2.ix[:5] #now index dates display month and not day (better for graph)
 
-    #Number of distinct users creating issues each month (hint: you can pass a
-      #function to resample's how argument, and there's nothing wrong with having
-      #string values in a TimeSeries)
+    #graph number of issues per month
+    plot_issues_per_month(myts2)    
+
+    #Graph number of distinct users creating issues each month 
+    plot_users_per_month(myts2)
+    
 
     #6) Make a table and an accompanying plot illustrating:
 
