@@ -77,6 +77,7 @@ def main():
     ts = create_df(FileName="closed.json")
     print ts.ix[:5]
 
+
     #5) Now construct appropriate time series and pandas functions to make the
         #following plots:
 
@@ -100,6 +101,26 @@ def main():
      # long were they open on average? (hint: use the total_seconds function on the
      # timedelta objects computed when subtracting datetime objects). Also show the
      # number of issues in each month in the table.
+
+    #calculate days elapsed between creation and closure
+    time_open = np.array(ts["closed_at"])-np.array(ts["created_at"])
+    print type(time_open[5])
+    print "Number of observations: " , len(time_open)
+    days_open = []
+    for i in range(len(time_open)):
+        #convert each datetime.timedelta to number of days
+        days_diff = time_open[i].total_seconds() / (60.*60*24)
+        days_open.append(days_diff)
+    print days_open[:5]
+    days_open_ts = pd.Series(days_open, index=dedup["created_at"]) 
+    print days_open_ts[:20]
+
+    #get average number of days open per month
+    myts3 = days_open_ts.to_period(freq='M') #convert
+    mean_days_per_month = myts3.resample('M', how=['mean','count'])
+    print mean_days_per_month
+
+
 
     #7) Make a DataFrame containing all the comments for all of the issues. You will
     #want to add an 'id' attribute to each comment while doing so so that each row
