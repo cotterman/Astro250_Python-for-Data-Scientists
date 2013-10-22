@@ -139,20 +139,21 @@ def create_comment_df(FileName):
             newrow += 1
     #print mydf.ix[mydf.comment_count>1][:10]
 
-    #get ride of duplicated rows 
+    #get rid of duplicated rows 
         #I assume we should though assignment does not specify here
-    print "Number of rows before dropping duplicates: " , mydf.shape[0], "\n"
-    #mydf2 = pd.drop_duplicates(mydf) #I don't know how to get this to work
-    #print "Number of rows after dropping duplicates: " , mydf2.shape[0], "\n"
+    mydf2 = mydf.drop_duplicates(['id','comment_count','comment_author','comment_created','comment_text'])
+    print "Number of rows after dropping duplicates: " , mydf2.shape[0], "\n"
 
     #Convert the 'created' column to datetime format; note you will need to multiply
     #the values (appropriately converted to integers) by 1000000 to get them in
     #nanoseconds and pass to to_datetime.
-    for row in range(mydf.shape[0]):
-        mydf.comment_created[row] = pd.to_datetime(int(mydf.comment_created[row])*1000000)
-    print mydf[mydf.comment_count>1][:10][['id','comment_count','comment_author','comment_created','comment_text']]
+    mydf2.index = range(mydf2.shape[0])
+    for row in range(mydf2.shape[0]):
+        mydf2.comment_created[row] = pd.to_datetime(int(mydf2.comment_created[row])*1000000)
+    print "Sample of dataframe in response to item 7: \n"
+    print mydf2[mydf2.comment_count>1][:10][['id','comment_count','comment_author','comment_created','comment_text']]
 
-    return mydf
+    return mydf2
 
 
 def main():
