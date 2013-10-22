@@ -95,7 +95,8 @@ def plot_days_elapsed(ts):
     #get average number of days open per month
     myts3 = days_open_ts.to_period(freq='M') #convert
     mean_days_per_month = myts3.resample('M', how=['mean','count'])
-    print mean_days_per_month
+    mean_days_per_month.index.name = "Month"
+    print "Table for item 6: \n" , mean_days_per_month
     mean_days_per_month.plot(title="Mean number of days it took for issues to be closed")
     plt.savefig('Mean_days_per_month.pdf')
 
