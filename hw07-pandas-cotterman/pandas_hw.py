@@ -71,6 +71,35 @@ def plot_users_per_month(tsdata):
     plt.savefig('Users_per_month.pdf') #why do I also see issues_per_month?
 
 
+def plot_days_elapsed(ts):
+    """
+    Create a plot and table containing the mean number of days it took for issues 
+    to be closed by the month they were opened. 
+    In other words, for closed issues created in August 2012, how
+     # long were they open on average? (hint: use the total_seconds function on the
+     # timedelta objects computed when subtracting datetime objects). Also show the
+     # number of issues in each month in the table.
+    """
+
+    time_open = np.array(ts["closed_at"])-np.array(ts["created_at"])
+    print type(time_open[5])
+    days_open = []
+    for i in range(len(time_open)):
+        #convert each datetime.timedelta to number of days
+        days_diff = time_open[i].total_seconds() / (60.*60*24)
+        days_open.append(days_diff)
+    print days_open[:5]
+    days_open_ts = pd.Series(days_open, index=ts["created_at"]) 
+    print days_open_ts[:20]
+
+    #get average number of days open per month
+    myts3 = days_open_ts.to_period(freq='M') #convert
+    mean_days_per_month = myts3.resample('M', how=['mean','count'])
+    print mean_days_per_month
+    mean_days_per_month.plot(title="Mean number of days it took for issues to be closed")
+    plt.savefig('Mean_days_per_month.pdf')
+
+
 def main():
 
     #0 - 4) Create data from from supplied json file
@@ -93,33 +122,9 @@ def main():
     #Graph number of distinct users creating issues each month 
     plot_users_per_month(myts2)
     
-
-    #6) Make a table and an accompanying plot illustrating:
-
-    #The mean number of days it took for issues to be closed by the month they
-     # were opened. In other words, for closed issues created in August 2012, how
-     # long were they open on average? (hint: use the total_seconds function on the
-     # timedelta objects computed when subtracting datetime objects). Also show the
-     # number of issues in each month in the table.
-
-    #calculate days elapsed between creation and closure
-    time_open = np.array(ts["closed_at"])-np.array(ts["created_at"])
-    print type(time_open[5])
-    print "Number of observations: " , len(time_open)
-    days_open = []
-    for i in range(len(time_open)):
-        #convert each datetime.timedelta to number of days
-        days_diff = time_open[i].total_seconds() / (60.*60*24)
-        days_open.append(days_diff)
-    print days_open[:5]
-    days_open_ts = pd.Series(days_open, index=dedup["created_at"]) 
-    print days_open_ts[:20]
-
-    #get average number of days open per month
-    myts3 = days_open_ts.to_period(freq='M') #convert
-    mean_days_per_month = myts3.resample('M', how=['mean','count'])
-    print mean_days_per_month
-
+    #6) Make a table and an accompanying plot illustrating 
+        #days elapsed between creation and closure
+    plot_days_elapsed(ts)
 
 
     #7) Make a DataFrame containing all the comments for all of the issues. You will
