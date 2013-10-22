@@ -1,4 +1,10 @@
 
+##############################################################################
+# Overview: Use pandas to explore downloaded json file.
+# Author: Carolyn Cotterman
+##############################################################################
+
+
 import numpy as np
 import pandas as pd
 import pprint
@@ -96,17 +102,65 @@ def plot_days_elapsed(ts):
     myts3 = days_open_ts.to_period(freq='M') #convert
     mean_days_per_month = myts3.resample('M', how=['mean','count'])
     mean_days_per_month.index.name = "Month"
-    print "Table for item 6: \n" , mean_days_per_month
+    print "\nTable for item 6: mean days from creation to closure \n" , mean_days_per_month
     mean_days_per_month.plot(title="Mean number of days it took for issues to be closed")
     plt.savefig('Mean_days_per_month.pdf')
+
+
+def create_comment_df(FileName):
+    myfile = json.load(open(FileName, "r"))
+    print "Number of rows in original df: " , len(myfile), "\n"
+
+    #size of expanded dataframe
+    newsize = 0
+    for counter, element in enumerate(myfile):
+        for comment in myfile[counter]['comments']:
+            newsize +=1
+    print "Number of rows in expanded dataframe:" ,  newsize , "\n"
+
+    #build data frame expanded so each comment gets a row
+    mydf = pd.DataFrame(index=range(newsize), 
+        columns=['title', 'created_at', 'labels', 'closed_at', 'user', 'id', 'comment_count', 
+                 'comment_author','comment_created','comment_text','comment_updated'])
+    newrow = 0
+    for counter, element in enumerate(myfile):
+        for comment in myfile[counter]['comments']:
+            mydf.title[newrow] = myfile[counter]['title'] 
+            mydf.created_at[newrow] = myfile[counter]['created_at'] 
+            mydf.labels[newrow] = myfile[counter]['labels'] 
+            mydf.closed_at[newrow] = myfile[counter]['closed_at'] 
+            mydf.user[newrow] = myfile[counter]['user']['login']
+            mydf.id[newrow] = myfile[counter]['id'] 
+            mydf.comment_count[newrow] = len(myfile[counter]['comments'])
+            mydf.comment_author[newrow] = comment['author']
+            mydf.comment_created[newrow] = comment['created']
+            mydf.comment_text[newrow] = comment['text']
+            mydf.comment_updated[newrow] = comment['updated']
+            newrow += 1
+    #print mydf.ix[mydf.comment_count>1][:10]
+
+    #get ride of duplicated rows 
+        #I assume we should though assignment does not specify here
+    print "Number of rows before dropping duplicates: " , mydf.shape[0], "\n"
+    #mydf2 = pd.drop_duplicates(mydf) #I don't know how to get this to work
+    #print "Number of rows after dropping duplicates: " , mydf2.shape[0], "\n"
+
+    #Convert the 'created' column to datetime format; note you will need to multiply
+    #the values (appropriately converted to integers) by 1000000 to get them in
+    #nanoseconds and pass to to_datetime.
+    for row in range(mydf.shape[0]):
+        mydf.comment_created[row] = pd.to_datetime(int(mydf.comment_created[row])*1000000)
+    print mydf[mydf.comment_count>1][:10][['id','comment_count','comment_author','comment_created','comment_text']]
+
+    return mydf
 
 
 def main():
 
     #0 - 4) Create data from from supplied json file
+        #this data is "deduped" by issue ID number
     ts = create_df(FileName="closed.json")
     print ts.ix[:5]
-
 
     #5) Now construct appropriate time series and pandas functions to make the
         #following plots:
@@ -128,13 +182,10 @@ def main():
     plot_days_elapsed(ts)
 
 
-    #7) Make a DataFrame containing all the comments for all of the issues. You will
-    #want to add an 'id' attribute to each comment while doing so so that each row
+    #7) Make a DataFrame containing all the comments for all of the issues. 
+    #Add an 'id' attribute to each comment while doing so so that each row
     #contains a single comment and has the id of the issue it belongs to.
-
-    #Convert the 'created' column to datetime format; note you will need to multiply
-    #the values (appropriately converted to integers) by 1000000 to get them in
-    #nanoseconds and pass to to_datetime.
+    comment_df = create_comment_df(FileName="closed.json")
 
     #8) For each month, compute a table summarizing the following for each month:
 
