@@ -111,6 +111,35 @@ def plot_days_elapsed(ts):
     plt.savefig('Mean_days_per_month.pdf')
 
 
+def create_label_df(FileName="closed.json"):
+    """
+    Create dataframe containing pairs of issue ids and corresponding label(s)
+    """
+    myfile = json.load(open(FileName, "r"))
+
+    mytups = []
+    for counter, element in enumerate(myfile):
+        if len(myfile[counter]['labels'])==0:
+            mytups.append((myfile[counter]['id'],"None"))
+        else:
+            nlab = 0
+            for label in myfile[counter]['labels']:
+                mytups.append(( myfile[counter]['id'], myfile[counter]['labels'][nlab]['name'] ))
+                nlab += 1
+
+    #build data frame expanded so each comment gets a row
+    mydf = pd.DataFrame(index=range(len(mytups)), columns=['id','label'])     
+    for row, tup in enumerate(mytups):
+        mydf.ix[row]['id'] = tup[0]
+        mydf.ix[row]['label'] = tup[1]
+
+    #get rid of duplicated rows 
+        #I assume we should though assignment does not specify here
+    mydf2 = mydf.drop_duplicates(['id','label'])
+    print "\nSample from dataframe containing labels-id mapping (item 9): \n" , mydf2[:30]
+
+    return mydf2
+
 def create_comment_df(FileName):
     myfile = json.load(open(FileName, "r"))
     #print "Number of rows in original df: " , len(myfile), "\n"
@@ -183,6 +212,10 @@ def calcs_for_item8(comment_df):
     """
     Produce summary table of monthly comments.
     """
+
+    #create a defaultdict of defaultdicts of ints (i.e., the inner defaultdict will map keys to ints)   
+    #lambda is a keyword to indicate that we are creating a "unnamed" function
+        #ex:  (lambda x,y: 7+x+y)(1,2)
     mydict = defaultdict(lambda: defaultdict(int))
     for date, user in izip(comment_df['comment_created'], comment_df['comment_author']):
         mydict[(date.year, date.month)][user] += 1
@@ -190,6 +223,8 @@ def calcs_for_item8(comment_df):
     df8 = pd.DataFrame(index=range(len(mydict.keys())), 
         columns=['year-month', 'chattiest_name', 'chattiest_percent', 'author_count','comment_count'])
 
+    #note: the default iterator only iterates over keys, but we want the keys and their associated value(s)
+        #.iteritems will return the keys and their associated values
     for counter, ((year, month), data) in enumerate(mydict.iteritems()):
         #print (year, month), max( (v,k) for (k,v) in data.iteritems()) ,\
          #   len(data), sum(data.values())
@@ -245,6 +280,7 @@ def main():
     #label. If an issue has 3 elements in its 'labels' value, add 3 rows to the
     #table. If an issue does not have any labels, place a single row with None as
     #the label (hint: construct a list of tuples, then make the DataFrame).
+    label_df = create_label_df(FileName="closed.json")
 
     #10) Now, join the issues data with the labels helper table (pandas.merge). Add
     #a column to this table containing the number of days (as a floating point
