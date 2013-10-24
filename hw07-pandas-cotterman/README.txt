@@ -12,8 +12,6 @@
 #For questions requesting that I build a specified dataframe, 
     my code prints the dataframe or a subset of it.
 
+#I finished all but the last item (#11)
 
 
-###############################################################################
-######### Notes on the things I learned from this week's module ###############
-###############################################################################

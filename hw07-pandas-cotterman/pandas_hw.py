@@ -261,6 +261,16 @@ def join_issues_and_labels(ts, label_df):
     
     return df10
 
+def calc_time_per_label_month(joined_df):
+    """
+    Calculate and plot mean time till closure by label, by month
+    """
+
+    print "\nSample of dataframe produced for item 11:\n"
+
+
+###############################################################################
+
 
 def main():
 
@@ -316,6 +326,7 @@ def main():
     #11) Compute a table containing the average time to close for each label
     #type. Now make a plot comparing mean time to close by month for Enhancement
     #versus Bug issue types.
+    calc_time_per_label_month(joined_df)
 
 main()
 
