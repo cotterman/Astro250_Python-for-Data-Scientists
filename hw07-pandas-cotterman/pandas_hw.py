@@ -12,6 +12,9 @@ import json
 from datetime import datetime
 from dateutil.parser import parse
 import matplotlib.pyplot as plt
+from collections import defaultdict
+from itertools import izip
+
 
 def create_df(FileName):
     """
@@ -40,13 +43,13 @@ def create_df(FileName):
         #column contains only string usernames.
         mydf.user[counter] = myfile[counter]['user']['login']
         mydf.id[counter] = myfile[counter]['id'] 
-    print mydf.ix[:5] , "\n"
+    print "\nSample from dataframe produced for item 1:\n" , mydf.ix[:5] , "\n"
 
     #2) Remove duplicate rows by id from the DataFrame you just created using the id
         #column's duplicated method.
     print "Number of rows before dropping duplicates: " , mydf.shape[0], "\n"
     dedup = mydf.drop_duplicates(['id'])
-    print "Number of rows after dropping duplicates: " , dedup.shape[0], "\n"
+    print "Number of rows after dropping duplicates (item 2): " , dedup.shape[0], "\n"
     #keep in mind that indices of dedup are not sequential from 0 to dedup.shape[0]
 
 
@@ -58,6 +61,7 @@ def create_df(FileName):
         #these methods also work
             #dedup.ix[counter]['created_at'] = parse(dedup.ix[counter]['created_at'])
             #dedup.ix[counter]['created_at'] = pd.to_datetime(dedup.ix[counter]['created_at'])
+    print "Sample from dataframe produced for item 4:\n" , dedup.ix[:5] , "\n"
 
     return dedup
 
@@ -70,9 +74,9 @@ def plot_issues_per_month(tsdata):
 
 def plot_users_per_month(tsdata):
     dedup2 = tsdata.drop_duplicates(['user','created_at'])
-    print dedup2[:10]
+    #print dedup2[:10]
     users_per_month = dedup2.resample('M', how='count')
-    print users_per_month
+    #print users_per_month
     users_per_month.plot(title="Number of distinct users creating issues each month")
     plt.savefig('Users_per_month.pdf') #why do I also see issues_per_month?
 
@@ -88,15 +92,15 @@ def plot_days_elapsed(ts):
     """
 
     time_open = np.array(ts["closed_at"])-np.array(ts["created_at"])
-    print type(time_open[5])
+    #print type(time_open[5])
     days_open = []
     for i in range(len(time_open)):
         #convert each datetime.timedelta to number of days
         days_diff = time_open[i].total_seconds() / (60.*60*24)
         days_open.append(days_diff)
-    print days_open[:5]
+    #print days_open[:5]
     days_open_ts = pd.Series(days_open, index=ts["created_at"]) 
-    print days_open_ts[:20]
+    #print days_open_ts[:20]
 
     #get average number of days open per month
     myts3 = days_open_ts.to_period(freq='M') #convert
@@ -109,14 +113,14 @@ def plot_days_elapsed(ts):
 
 def create_comment_df(FileName):
     myfile = json.load(open(FileName, "r"))
-    print "Number of rows in original df: " , len(myfile), "\n"
+    #print "Number of rows in original df: " , len(myfile), "\n"
 
     #size of expanded dataframe
     newsize = 0
     for counter, element in enumerate(myfile):
         for comment in myfile[counter]['comments']:
             newsize +=1
-    print "Number of rows in expanded dataframe:" ,  newsize , "\n"
+    #print "Number of rows in expanded dataframe:" ,  newsize , "\n"
 
     #build data frame expanded so each comment gets a row
     mydf = pd.DataFrame(index=range(newsize), 
@@ -142,7 +146,7 @@ def create_comment_df(FileName):
     #get rid of duplicated rows 
         #I assume we should though assignment does not specify here
     mydf2 = mydf.drop_duplicates(['id','comment_count','comment_author','comment_created','comment_text'])
-    print "Number of rows after dropping duplicates: " , mydf2.shape[0], "\n"
+    #print "Number of rows after dropping duplicates: " , mydf2.shape[0], "\n"
 
     #Convert the 'created' column to datetime format; note you will need to multiply
     #the values (appropriately converted to integers) by 1000000 to get them in
@@ -150,18 +154,59 @@ def create_comment_df(FileName):
     mydf2.index = range(mydf2.shape[0])
     for row in range(mydf2.shape[0]):
         mydf2.comment_created[row] = pd.to_datetime(int(mydf2.comment_created[row])*1000000)
-    print "Sample of dataframe in response to item 7: \n"
-    print mydf2[mydf2.comment_count>1][:10][['id','comment_count','comment_author','comment_created','comment_text']]
+
+    #change index to comment_created (date) so we can group on this index later
+    mydf2 = mydf2.set_index(mydf2.comment_created)
+    mydf2 = mydf2.sort_index()
+    print "\nSample of dataframe in response to item 7: \n"
+    print mydf2[mydf2.comment_count>1][:10][['id','comment_author','comment_created','comment_text']]
 
     return mydf2
 
+def calc_comments_per_month_REJECT(comment_df):
+    """
+    Calculate the total number of issue comments
+        #I get different answer than I do using the defaultdict approach (why??)
+    """
+    mydf3 = comment_df.drop(['title', 'created_at', 'labels', 'closed_at', 'user'], axis=1)
+    mydf4 = mydf3.to_period(freq='M')
+    #print "After sorting and dropping various columns: \n" , mydf3[:5] , "\n"
+
+    mydf5 = mydf4.drop(['comment_count','comment_author','id','comment_updated','comment_text'], axis=1)
+    #mydf5 = mydf3.drop_duplicates(['comment_created'])
+    #print mydf5[:5]
+    comments_per_month = mydf5.resample('M', how='count') #wacky result if I don't first drop most columns (why??)
+    #print type(comments_per_month)
+    print "\n Item 8a) Number of comments per month: \n \n" , comments_per_month
+
+def calcs_for_item8(comment_df):
+    """
+    Produce summary table of monthly comments.
+    """
+    mydict = defaultdict(lambda: defaultdict(int))
+    for date, user in izip(comment_df['comment_created'], comment_df['comment_author']):
+        mydict[(date.year, date.month)][user] += 1
+
+    df8 = pd.DataFrame(index=range(len(mydict.keys())), 
+        columns=['year-month', 'chattiest_name', 'chattiest_percent', 'author_count','comment_count'])
+
+    for counter, ((year, month), data) in enumerate(mydict.iteritems()):
+        #print (year, month), max( (v,k) for (k,v) in data.iteritems()) ,\
+         #   len(data), sum(data.values())
+        df8.ix[counter]['year-month'] = (year, month)
+        df8.ix[counter]['chattiest_name'] = max( (v,k) for (k,v) in data.iteritems())[1]
+        df8.ix[counter]['chattiest_percent'] = 100*float(max( (v,k) for (k,v) in data.iteritems())[0])/sum(data.values())
+        df8.ix[counter]['author_count'] = len(data)
+        df8.ix[counter]['comment_count'] = sum(data.values())
+
+    print "\nInfo on comments per month (item 8): \n \n" , df8
 
 def main():
 
     #0 - 4) Create data from from supplied json file
         #this data is "deduped" by issue ID number
     ts = create_df(FileName="closed.json")
-    print ts.ix[:5]
+    #print ts.ix[:5]
 
     #5) Now construct appropriate time series and pandas functions to make the
         #following plots:
@@ -170,7 +215,7 @@ def main():
     myts = pd.Series(np.array(ts["user"]), index=ts["created_at"])  
     #print "time series: \n", myts[:5] 
     myts2 = myts.to_period(freq='M') #convert to data with a monthly "period" index 
-    print myts2.ix[:5] #now index dates display month and not day (better for graph)
+    #print myts2.ix[:5] #now index dates display month and not day (better for graph)
 
     #graph number of issues per month
     plot_issues_per_month(myts2)    
@@ -188,12 +233,13 @@ def main():
     #contains a single comment and has the id of the issue it belongs to.
     comment_df = create_comment_df(FileName="closed.json")
 
-    #8) For each month, compute a table summarizing the following for each month:
+    #8) Compute a table summarizing the following for each month:
+        #- Total number of issue comments
+        #- The "chattiest" user (most number of comments)
+        #- The percentage of total comments made by the chattiest users
+        #- The number of distinct participants in the issue comments
+    calcs_for_item8(comment_df)
 
-    #- Total number of issue comments
-    #- The "chattiest" user (most number of comments)
-    #- The percentage of total comments made by the chattiest users
-    #- The number of distinct participants in the issue comments
 
     #9) Create a helper 'labels' table from the issues data with two columns: id and
     #label. If an issue has 3 elements in its 'labels' value, add 3 rows to the
