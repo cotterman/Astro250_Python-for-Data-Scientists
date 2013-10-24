@@ -4,6 +4,7 @@
 ##############################################################################
 
 #My code for this assignment is contained in pandas_hw.py
+    #assumes datafile "closed.json" is in same folder as code (ie the pwd)
 
 #Plots created by this code are in same folder as the code itself:
     #Issues_per_month.pdf (item 5)

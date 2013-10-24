@@ -265,8 +265,27 @@ def calc_time_per_label_month(joined_df):
     """
     Calculate and plot mean time till closure by label, by month
     """
+    #create defaultdict with desired info
 
+    grpd_data = defaultdict(list)
+    for row_num, row in enumerate(joined_df.iterrows()):
+        grpd_data[(row[1]['label'], row[1]['created_at'].month)].append( row[1]['days_open'] )
+    #test
+    #for (label, date), value in grpd_data.iteritems():
+    #    print label, date, sum(value)/len(value)
+        
+    #build data frame 
+
+    mydf11 = pd.DataFrame(index=range(len(grpd_data)), columns=['month','label','mean_days_open'])     
+    for row, ((label, date), value) in enumerate(grpd_data.iteritems()):
+        mydf11.ix[row]['month'] = date
+        mydf11.ix[row]['label'] = label
+        mydf11.ix[row]['mean_days_open'] = sum(value)/len(value)
+    
     print "\nSample of dataframe produced for item 11:\n"
+    print mydf11[:20]
+
+    #plot
 
 
 ###############################################################################
