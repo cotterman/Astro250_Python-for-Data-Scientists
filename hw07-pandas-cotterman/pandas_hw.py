@@ -236,12 +236,38 @@ def calcs_for_item8(comment_df):
 
     print "\nInfo on comments per month (item 8): \n \n" , df8
 
+
+def join_issues_and_labels(ts, label_df):
+    """
+    Join the issues data with the labels helper table (pandas.merge). 
+    """
+
+    #join the issues data with the labels helper table (pandas.merge). 
+    df10 = pd.merge(ts, label_df, on='id', how='outer')
+
+    #Add a column to this table containing the number of days (as a floating point
+    #number) it took to close each issue.
+    time_open = np.array(df10["closed_at"])-np.array(df10["created_at"])
+    #print type(time_open[5])
+    days_open = []
+    for i in range(len(time_open)):
+        #convert each datetime.timedelta to number of days
+        days_diff = time_open[i].total_seconds() / (60.*60*24)
+        days_open.append(days_diff)
+    df10['days_open'] = days_open
+
+    print "\nSample of dataframe produced for item 10:\n"
+    print df10[:30][['id','created_at','closed_at','days_open','label']]
+    
+    return df10
+
+
 def main():
 
     #0 - 4) Create data from from supplied json file
         #this data is "deduped" by issue ID number
     ts = create_df(FileName="closed.json")
-    #print ts.ix[:5]
+    #print "Time series (from items 0 - 4)\n" ,  ts.ix[:5]
 
     #5) Now construct appropriate time series and pandas functions to make the
         #following plots:
@@ -285,6 +311,7 @@ def main():
     #10) Now, join the issues data with the labels helper table (pandas.merge). Add
     #a column to this table containing the number of days (as a floating point
     #number) it took to close each issue.
+    joined_df = join_issues_and_labels(ts, label_df)
 
     #11) Compute a table containing the average time to close for each label
     #type. Now make a plot comparing mean time to close by month for Enhancement
