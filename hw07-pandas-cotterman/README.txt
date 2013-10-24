@@ -10,6 +10,7 @@
     #Issues_per_month.pdf (item 5)
     #Users_per_month.pdf (item 5)
     #Mean_days_per_month.pdf (item 6)
+    #Mean_days_per_month_bugs_enhance.pdf (item 11)
 #For questions requesting that I build a specified dataframe, 
     my code prints the dataframe or a subset of it.
 
