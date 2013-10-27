@@ -295,18 +295,16 @@ def calc_time_per_label_month(joined_df):
     f, ax = plt.subplots()
     ax.set_ylim(0, 100)
     ax.set_xlim(0, 12)
-    print myenhance['month']
-    print myenhance['mean_days_open']
-    lns1 = ax.plot(x = myenhance['month'], y=myenhance['mean_days_open'], label='Enhancements',
+    ax.plot(x = np.array(myenhance['month']), y=np.array(myenhance['mean_days_open']), label='Enhancements',
         color='b')
-    lns2 = ax.plot(x = mybugs['month'], y=mybugs['mean_days_open'], label='Bugs',
+    ax.plot(x = np.array(mybugs['month']), y=np.array(mybugs['mean_days_open']), label='Bugs',
         color='r')
     ax.set_title('Average time between creation and clusure for bugs vs. enhancements')
     ax.set_xlabel('Month Number')
     ax.set_ylabel('Mean time from creation to closure (days)')
-    lns = lns1+lns2
-    labs = [l.get_label() for l in lns]
-    ax.legend(lns, labs, loc='center left')
+    #lns = lns1+lns2
+    #labs = [l.get_label() for l in lns]
+    #ax.legend(lns, labs, loc='center left')
 
     plt.savefig('Mean_days_per_month_bugs_enhance.pdf') #why is data not plotted ??
 
