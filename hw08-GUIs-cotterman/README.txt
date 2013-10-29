@@ -1,0 +1,23 @@
+##############################################################################
+################## Notes on running code #####################################
+##############################################################################
+
+#My code for this assignment is contained in GUI_using_traits.py
+
+#First must install traits and traitsgui.  I did this as follows:
+    #sudo aptitutde install python-traits
+    #sudo aptitutde install python-traitsui
+    #sudo aptitude install python-wxtools (I appeared to already have python-wxgtk2.8)
+
+
+###############################################################################
+
+If we begin our class definition with something like:
+    class Circle(Shape):
+then we are declaring that the class Circle shall inherit the attributes and methods from the class Shape.
+
+
+HasTraits is a class which supports creating graphical representations of attributes. 
+  #The HasTraits class enforces that the types of all the attributes are specified in the class definition.
+  #The HasTraits objects have a configure_traits() method that brings up a dialog to edit 
+    the objects’ attributes specified in its class definition.

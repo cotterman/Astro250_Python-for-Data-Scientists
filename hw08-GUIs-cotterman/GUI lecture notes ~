@@ -1,0 +1,27 @@
+
+GUI Lecture notes:
+
+Tkinter is the most obvious choice to building a GUI, but
+    it is not without its weaknesses
+    #say you're using "tickle-tk"
+
+wxPython might be great, but it requires a lot of non-built-ins
+    and can be very difficult to get working
+
+The go-to for building game GUI is pygame
+
+See grid.py for examples of sticky and anchoring
+
+#could be useful for matplotlib in ipython 
+#import sys
+#sys.stdout.flush()
+
+
+#satelite imagery relationship with cropyeilds (and stocks)
+
+Kimmen solanger (sp?) does biostat stuff
+       
+
+
+
+
