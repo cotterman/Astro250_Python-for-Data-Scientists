@@ -35,6 +35,8 @@ def main():
         datadir = Directory("./")
         
     bird = MyImage(name="Bird")
+
+    #bring up dialog to edit objects’ attributes specified in class definition
     bird.configure_traits()	
 
     #The application will accept search strings in the search box and then

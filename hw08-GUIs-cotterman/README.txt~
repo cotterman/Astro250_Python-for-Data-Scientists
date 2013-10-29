@@ -18,5 +18,6 @@ then we are declaring that the class Circle shall inherit the attributes and met
 
 
 HasTraits is a class which supports creating graphical representations of attributes. 
-The HasTraits class enforces that the types of all the attributes are specified in the class definition.
-The HasTraits objects have a configure_traits() method that brings up a dialog to edit the objects’ attributes specified in its class definition.
+  #The HasTraits class enforces that the types of all the attributes are specified in the class definition.
+  #The HasTraits objects have a configure_traits() method that brings up a dialog to edit 
+    the objects’ attributes specified in its class definition.

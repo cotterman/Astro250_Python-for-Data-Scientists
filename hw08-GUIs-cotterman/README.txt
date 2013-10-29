@@ -10,7 +10,8 @@
     #sudo aptitude install python-wxtools (I appeared to already have python-wxgtk2.8)
 
 
-###############################################################################
+
+####################### Lessons Learned #######################################
 
 If we begin our class definition with something like:
     class Circle(Shape):
@@ -21,3 +22,7 @@ HasTraits is a class which supports creating graphical representations of attrib
   #The HasTraits class enforces that the types of all the attributes are specified in the class definition.
   #The HasTraits objects have a configure_traits() method that brings up a dialog to edit 
     the objects’ attributes specified in its class definition.
+
+I based my code largely on the excellent tutorial/example found here:
+http://code.enthought.com/projects/traits/docs/html/tutorials/traits_ui_scientific_app.html
+(I went thru this tutorial, taking notes and trying things out in the files tester.py - tester6.py)
