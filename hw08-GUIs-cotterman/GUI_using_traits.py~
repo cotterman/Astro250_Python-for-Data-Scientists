@@ -83,16 +83,10 @@ class AcquisitionThread(Thread):
 
     def run(self):
         """ Runs the acquisition loop. """
-        self.display('Camera started')
-        n_img = 0
-        while not self.wants_abort:
-            n_img += 1
-            img =self.acquire(self.experiment)
-            self.display('%d image captured' % n_img)
-            self.image_show(img)
-            self.process(img)
-            sleep(1)
-        self.display('Camera stopped')
+        img =self.acquire(self.experiment)
+        self.display('image captured')
+        self.image_show(img)
+        self.process(img)
 
 class ControlPanel(HasTraits):
     """ This object is the core of the traitsUI interface. Its view is
@@ -128,16 +122,13 @@ class ControlPanel(HasTraits):
         """ Callback of the "start stop acquisition" button. This starts
         the acquisition thread, or kills it.
         """
-        if self.acquisition_thread and self.acquisition_thread.isAlive():
-            self.acquisition_thread.wants_abort = True
-        else:
-            self.acquisition_thread = AcquisitionThread()
-            self.acquisition_thread.display = self.add_line
-            self.acquisition_thread.acquire = self.camera.acquire
-            self.acquisition_thread.experiment = self.experiment
-            self.acquisition_thread.image_show = self.image_show
-            self.acquisition_thread.results = self.results
-            self.acquisition_thread.start()
+        self.acquisition_thread = AcquisitionThread()
+        self.acquisition_thread.display = self.add_line
+        self.acquisition_thread.acquire = self.camera.acquire
+        self.acquisition_thread.experiment = self.experiment
+        self.acquisition_thread.image_show = self.image_show
+        self.acquisition_thread.results = self.results
+        self.acquisition_thread.start()
 
     def add_line(self, string):
         """ Adds a line to the textbox display.
@@ -158,7 +149,7 @@ class MainWindowHandler(Handler):
             and info.object.panel.acquisition_thread.isAlive() ):
             info.object.panel.acquisition_thread.wants_abort = True
             while info.object.panel.acquisition_thread.isAlive():
-                sleep(0.1)
+                sleep(1)
             wx.Yield()
         return True
 
