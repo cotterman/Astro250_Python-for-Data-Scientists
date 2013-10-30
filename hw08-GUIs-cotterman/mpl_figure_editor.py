@@ -1,4 +1,6 @@
 
+#aka tester5.py
+
 #traits does not provide an editor for every need. 
 #If we want to insert a powerful tool for plotting we have to create our own traits editor.
 #To do so, we need to translate a wxPython object in a traits editor by providing the corresponding API 

@@ -13,10 +13,9 @@
 
 ####################### Lessons Learned #######################################
 
-If we begin our class definition with something like:
+If we begin a class definition with something like:
     class Circle(Shape):
 then we are declaring that the class Circle shall inherit the attributes and methods from the class Shape.
-
 
 HasTraits is a class which supports creating graphical representations of attributes. 
   #The HasTraits class enforces that the types of all the attributes are specified in the class definition.
@@ -25,4 +24,4 @@ HasTraits is a class which supports creating graphical representations of attrib
 
 I based my code largely on the excellent tutorial/example found here:
 http://code.enthought.com/projects/traits/docs/html/tutorials/traits_ui_scientific_app.html
-(I went thru this tutorial, taking notes and trying things out in the files tester.py - tester6.py)
+(I went thru this tutorial, taking notes and trying things out in the files tester1.py - tester6.py)

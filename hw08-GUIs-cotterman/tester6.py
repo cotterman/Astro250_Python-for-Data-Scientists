@@ -37,8 +37,9 @@ class Camera(HasTraits):
 
     def acquire(self, experiment):
         X, Y = indices((100, 100))
+        #I do not really understand this next line...how is it different from Z=X*0?
         Z = exp(-((X-experiment.x)**2+(Y-experiment.y)**2)/experiment.width**2)
-        Z += 1-2*rand(100,100)
+        Z += 1-2*rand(100,100) #rand(100,100) creates a 100x100 matrix of unif(0,1) numbers
         Z *= self.exposure
         Z[Z>2] = 2
         Z = Z**self.gain
@@ -138,7 +139,7 @@ class ControlPanel(HasTraits):
     def image_show(self, image):
         """ Plots an image on the canvas in a thread safe way.
         """
-        self.figure.axes[0].images=[]
+        self.figure.axes[0].images=[] #why?
         self.figure.axes[0].imshow(image, aspect='auto')
         wx.CallAfter(self.figure.canvas.draw)
 

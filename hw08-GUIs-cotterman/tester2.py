@@ -6,7 +6,7 @@ class Counter(HasTraits):
 
 #A HasTraits object has an edit_traits() method that creates a graphical panel to edit its attributes. 
 #This method creates and returns the panel, but does not start its event loop. 
- #(The panel is not yet “alive”, unlike with the configure_traits() method.) 
+ #(The panel is not yet "alive", unlike with the configure_traits() method.) 
 
 #command seems strange.....guess we are avoiding using a named instance of Counter??
     #and then wx.PySimpleApp().MainLoop() knows to use the most recently created HasTraits object??
