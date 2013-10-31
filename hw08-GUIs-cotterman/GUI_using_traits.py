@@ -14,24 +14,62 @@ from mpl_figure_editor import MPLFigureEditor
 from matplotlib.figure import Figure
 import wx
 
+import os
+import sys
+import time
+from urllib import FancyURLopener
+import urllib2
+import simplejson
+
 from scipy import * 
 from scipy.ndimage import imread
 import scipy.ndimage as ndi
 
 ###############################################################################
 
+def get_image(searchTerm):
 
+    # Replace spaces ' ' in search term for '%20' in order to comply with request
+    searchTerm = searchTerm.replace(' ','%20')
+
+    # Start FancyURLopener with defined version 
+    class MyOpener(FancyURLopener): 
+        version = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; it; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11'
+    myopener = MyOpener()
+
+    # Notice that the start changes for each iteration in order to request a new set of images for each loop
+    url = ('https://ajax.googleapis.com/ajax/services/search/images?' + 'v=1.0&q='+searchTerm+'&start='+str(0)+'&userip=MyIP')
+    print url
+    request = urllib2.Request(url, None, {'Referer': 'testing'})
+    response = urllib2.urlopen(request)
+
+    # Get results using JSON
+    results = simplejson.load(response)
+    data = results['responseData']
+    dataInfo = data['results']
+
+    # Iterate for each result and get unescaped url
+    for count, myUrl in enumerate(dataInfo):
+        if count==0:
+            url_string = myUrl['unescapedUrl']
+            print count, ": " , url_string
+            file_extension = url_string.split(".")[len(url_string.split("."))-1]
+            image_file_name = "downloaded_image" + "." + str(file_extension)
+            myopener.retrieve(url_string, image_file_name)
+    return image_file_name
 
 class Camera(HasTraits):
     """ Camera objects. Implements both the camera parameters controls, and
     the picture acquisition.
     """
-    exposure = Float(1, label="Choose desired exposure", desc="exposure")
-    gain = Enum(1, 2, 3, label="Select desired gain", desc="gain")
-    image_name = Str("hummingbird_0001.jpg", label="Name of file")
+    exposure = Float(1, label="Choose exposure", desc="exposure")
+    gain = Enum(1, 2, 3, label="Select gain", desc="gain")
+    search_term = Str("Python gods", label="Type search term")
 
     def acquire(self):
-        Z = imread(self.image_name)
+        image_file_name = get_image(str(self.search_term))
+        print str(image_file_name)
+        Z = imread(str(image_file_name))
         Z *= self.exposure
         Z = Z**self.gain
         return(Z)
@@ -135,18 +173,6 @@ class MainWindow(HasTraits):
 
 if __name__ == '__main__':
     MainWindow().configure_traits()
-
-
-#### My to-do ####
-
-#1) modify tester6.py such that it will read in image files (e.g., hummingbirds)
-
-#2) add image manipulation features
-
-#3) change so that each click on "aquire new image" 
-    #will acquire a new image (rather than updating image till you say stop)
-
-#4) get image via image search
 
 
 ##################### Original directions #####################################

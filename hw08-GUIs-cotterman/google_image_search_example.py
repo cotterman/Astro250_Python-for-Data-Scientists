@@ -18,8 +18,7 @@ class MyOpener(FancyURLopener):
 myopener = MyOpener()
 
 # Notice that the start changes for each iteration in order to request a new set of images for each loop
-i = 0
-url = ('https://ajax.googleapis.com/ajax/services/search/images?' + 'v=1.0&q='+searchTerm+'&start='+str(i*4)+'&userip=MyIP')
+url = ('https://ajax.googleapis.com/ajax/services/search/images?' + 'v=1.0&q='+searchTerm+'&start='+str(0)+'&userip=MyIP')
 print url
 request = urllib2.Request(url, None, {'Referer': 'testing'})
 response = urllib2.urlopen(request)
@@ -35,7 +34,9 @@ for count, myUrl in enumerate(dataInfo):
         url_string = myUrl['unescapedUrl']
         print count, ": " , url_string
         file_extension = url_string.split(".")[len(url_string.split("."))-1]
-        myopener.retrieve(url_string, "downloaded_image" + "." + str(file_extension))
+        image_file_name = "downloaded_image" + "." + str(file_extension)
+        myopener.retrieve(url_string, image_file_name)
+        print image_file_name
 
 
 # Sleep for one second to prevent IP blocking from Google
