@@ -28,9 +28,10 @@ class Camera(HasTraits):
     """
     exposure = Float(1, label="Exposure", desc="exposure, in ms")
     gain = Enum(1, 2, 3, label="Gain", desc="gain")
+    image_name = Str("hummingbird_0001.jpg", label="Name of file")
 
     def acquire(self):
-        Z = imread("hummingbird_0001.jpg")
+        Z = imread(self.image_name)
         Z *= self.exposure
         Z = Z**self.gain
         return(Z)
