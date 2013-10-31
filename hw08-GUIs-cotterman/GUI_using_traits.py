@@ -20,25 +20,7 @@ import scipy.ndimage as ndi
 
 ###############################################################################
 
-class Experiment(HasTraits):
-    """ Object that contains the parameters that control the experiment,
-    modified by the user.
-    """
-    width = Float(30, label="Width", desc="width of the cloud")
-    x = Float(50, label="X", desc="X position of the center")
-    y = Float(50, label="Y", desc="Y position of the center")
 
-class Results(HasTraits):
-    """ Object used to display the results.
-    """
-    width = Float(30, label="Width", desc="width of the cloud")
-    x = Float(50, label="X", desc="X position of the center")
-    y = Float(50, label="Y", desc="Y position of the center")
-
-    view = View( Item('width', style='readonly'),
-                 Item('x', style='readonly'),
-                 Item('y', style='readonly'),
-               )
 
 class Camera(HasTraits):
     """ Camera objects. Implements both the camera parameters controls, and
@@ -47,21 +29,11 @@ class Camera(HasTraits):
     exposure = Float(1, label="Exposure", desc="exposure, in ms")
     gain = Enum(1, 2, 3, label="Gain", desc="gain")
 
-    def acquire(self, experiment):
+    def acquire(self):
         Z = imread("hummingbird_0001.jpg")
         Z *= self.exposure
         Z = Z**self.gain
         return(Z)
-
-def process(image, results_obj):
-    """ Function called to do the processing """
-    X, Y = indices(image.shape)
-    x = sum(X*image)/sum(image)
-    y = sum(Y*image)/sum(image)
-    width = sqrt(abs(sum(((X-x)**2+(Y-y)**2)*image)/sum(image)))
-    results_obj.x = x
-    results_obj.y = y
-    results_obj.width = width
 
 class AcquisitionThread(Thread):
     """ Acquisition loop. This is the worker thread that retrieves images
@@ -83,39 +55,26 @@ class AcquisitionThread(Thread):
 
     def run(self):
         """ Runs the acquisition loop. """
-        img =self.acquire(self.experiment)
+        img =self.acquire()
         self.display('image captured')
         self.image_show(img)
-        self.process(img)
 
 class ControlPanel(HasTraits):
     """ This object is the core of the traitsUI interface. Its view is
     the right panel of the application, and it hosts the method for
     interaction between the objects and the GUI.
     """
-    experiment = Instance(Experiment, ())
     camera = Instance(Camera, ())
     figure = Instance(Figure)
-    results = Instance(Results, ())
-    start_stop_acquisition = Button("Start/Stop acquisition")
+    start_stop_acquisition = Button("Click to Refresh Image")
     results_string = String()
     acquisition_thread = Instance(AcquisitionThread)
     view = View(Group(
                     Group(
                         Item('start_stop_acquisition', show_label=False ),
                         Item('results_string',show_label=False,
-                            springy=True, style='custom' ),
-                        label="Control", dock='tab',),
-                    Group(
-                        Group(
-                            Item('experiment', style='custom', show_label=False),
-                            label="Input",),
-                        Group(
-                            Item('results', style='custom', show_label=False),
-                            label="Results",),
-                    label='Experiment', dock="tab"),
-                Item('camera', style='custom', show_label=False,  dock="tab"),
-                layout='tabbed'),
+                           style='custom' )),
+                Item('camera', style='custom', show_label=False)),
                 )
 
     def _start_stop_acquisition_fired(self):
@@ -125,9 +84,7 @@ class ControlPanel(HasTraits):
         self.acquisition_thread = AcquisitionThread()
         self.acquisition_thread.display = self.add_line
         self.acquisition_thread.acquire = self.camera.acquire
-        self.acquisition_thread.experiment = self.experiment
         self.acquisition_thread.image_show = self.image_show
-        self.acquisition_thread.results = self.results
         self.acquisition_thread.start()
 
     def add_line(self, string):
@@ -139,7 +96,6 @@ class ControlPanel(HasTraits):
         """ Plots an image on the canvas in a thread safe way.
         """
         self.figure.axes[0].images=[] #why?
-        #image2 = imread("hummingbird_0001.jpg") #test
         self.figure.axes[0].imshow(image, aspect='auto') #axes[0] refers to a subplot, I think
         wx.CallAfter(self.figure.canvas.draw)
 
@@ -156,7 +112,6 @@ class MainWindowHandler(Handler):
 class MainWindow(HasTraits):
     """ The main window, here go the instructions to create and destroy the application. """
     figure = Instance(Figure)
-
     panel = Instance(ControlPanel)
 
     def _figure_default(self):
