@@ -175,18 +175,6 @@ if __name__ == '__main__':
     MainWindow().configure_traits()
 
 
-#### My to-do ####
-
-#1) modify tester6.py such that it will read in image files (e.g., hummingbirds)
-
-#2) add image manipulation features
-
-#3) change so that each click on "aquire new image" 
-    #will acquire a new image (rather than updating image till you say stop)
-
-#4) get image via image search
-
-
 ##################### Original directions #####################################
 
 #Using Traits and TraitsUI create a GUI application that consists of a

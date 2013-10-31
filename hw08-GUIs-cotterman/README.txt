@@ -9,7 +9,9 @@
     #sudo aptitutde install python-traits
     #sudo aptitutde install python-traitsui
     #sudo aptitude install python-wxtools (I appeared to already have python-wxgtk2.8)
+#Also uses urllib, which I installed for a previous assignment
 
+#Code does all that was requested!  GUI should be self-explanatory.
 
 
 ####################### Lessons Learned #######################################

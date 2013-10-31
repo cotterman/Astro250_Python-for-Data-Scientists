@@ -28,6 +28,8 @@ import scipy.ndimage as ndi
 ###############################################################################
 
 def get_image(searchTerm):
+    """Obtain image using Google's image search API
+    """
 
     # Replace spaces ' ' in search term for '%20' in order to comply with request
     searchTerm = searchTerm.replace(' ','%20')
