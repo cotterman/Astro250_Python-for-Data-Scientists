@@ -3,6 +3,7 @@
 ##############################################################################
 
 #My code for this assignment is contained in GUI_using_traits.py
+    #note: this main script uses functions from mpl_figure_editor.py
 
 #First must install traits and traitsgui.  I did this as follows:
     #sudo aptitutde install python-traits

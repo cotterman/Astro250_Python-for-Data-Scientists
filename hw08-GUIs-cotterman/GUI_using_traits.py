@@ -26,8 +26,8 @@ class Camera(HasTraits):
     """ Camera objects. Implements both the camera parameters controls, and
     the picture acquisition.
     """
-    exposure = Float(1, label="Exposure", desc="exposure, in ms")
-    gain = Enum(1, 2, 3, label="Gain", desc="gain")
+    exposure = Float(1, label="Choose desired exposure", desc="exposure")
+    gain = Enum(1, 2, 3, label="Select desired gain", desc="gain")
     image_name = Str("hummingbird_0001.jpg", label="Name of file")
 
     def acquire(self):
