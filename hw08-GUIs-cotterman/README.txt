@@ -9,9 +9,11 @@
     #sudo aptitutde install python-traits
     #sudo aptitutde install python-traitsui
     #sudo aptitude install python-wxtools (I appeared to already have python-wxgtk2.8)
-#Also uses urllib, which I installed for a previous assignment
+#Code also uses urllib, which I installed for a previous assignment
 
 #Code does all that was requested!  GUI should be self-explanatory.
+    #note: there is a small delay when requesting to turn the image to gray-scale,
+            but it should appear in gray-scale in less than a minute.
 
 
 ####################### Lessons Learned #######################################

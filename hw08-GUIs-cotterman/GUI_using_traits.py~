@@ -28,6 +28,8 @@ import scipy.ndimage as ndi
 ###############################################################################
 
 def get_image(searchTerm):
+    """Obtain image using Google's image search API
+    """
 
     # Replace spaces ' ' in search term for '%20' in order to comply with request
     searchTerm = searchTerm.replace(' ','%20')
@@ -39,7 +41,6 @@ def get_image(searchTerm):
 
     # Notice that the start changes for each iteration in order to request a new set of images for each loop
     url = ('https://ajax.googleapis.com/ajax/services/search/images?' + 'v=1.0&q='+searchTerm+'&start='+str(0)+'&userip=MyIP')
-    print url
     request = urllib2.Request(url, None, {'Referer': 'testing'})
     response = urllib2.urlopen(request)
 
@@ -52,24 +53,40 @@ def get_image(searchTerm):
     for count, myUrl in enumerate(dataInfo):
         if count==0:
             url_string = myUrl['unescapedUrl']
-            print count, ": " , url_string
             file_extension = url_string.split(".")[len(url_string.split("."))-1]
             image_file_name = "downloaded_image" + "." + str(file_extension)
             myopener.retrieve(url_string, image_file_name)
     return image_file_name
 
+
+def gray_scale(image):
+    """ Return image such that color values take average of each pixal.
+    """
+    gray_image = image
+    #for color images
+    print image.ndim
+    if image.ndim>2:
+        for color in range(3):
+            for row in range(image.shape[0]):
+                for column in range(image.shape[1]):
+                    gray_image[row,column,color] = image[row,column,:].mean()
+    #no modifications needed if already gray-scale
+    return gray_image
+
 class Camera(HasTraits):
     """ Camera objects. Implements both the camera parameters controls, and
     the picture acquisition.
     """
-    exposure = Float(1, label="Choose exposure", desc="exposure")
-    gain = Enum(1, 2, 3, label="Select gain", desc="gain")
+    coloring = Enum("unchanged","gray_scale", label="Select coloring") 
+    exposure = Float(1, label="Choose exposure (1 is normal)", desc="exposure")
+    gain = Float(1, label="Choose gain (1 is normal)", desc="gain")
     search_term = Str("Python gods", label="Type search term")
 
     def acquire(self):
         image_file_name = get_image(str(self.search_term))
-        print str(image_file_name)
         Z = imread(str(image_file_name))
+        if self.coloring=="gray_scale":
+            Z = gray_scale(Z)
         Z *= self.exposure
         Z = Z**self.gain
         return(Z)
