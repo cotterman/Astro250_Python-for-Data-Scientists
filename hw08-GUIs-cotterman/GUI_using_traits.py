@@ -61,6 +61,7 @@ def get_image(searchTerm):
 
 def gray_scale(image):
     """ Return image such that color values take average of each pixal.
+            This will result in not pure gray, but rather subdued coloring.
     """
     gray_image = image
     #for color images

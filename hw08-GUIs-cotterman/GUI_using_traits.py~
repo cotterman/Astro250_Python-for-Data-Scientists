@@ -64,7 +64,6 @@ def gray_scale(image):
     """
     gray_image = image
     #for color images
-    print image.ndim
     if image.ndim>2:
         for color in range(3):
             for row in range(image.shape[0]):
