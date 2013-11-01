@@ -1,0 +1,15 @@
+
+Find T_1/T_p:
+
+First find p1 such that the two terms are equal.
+(1-s)T_{p-p1} + s*T_p1
+
+vs.
+
+s*T_p
+
+
+#starcluster is a tool that allows you to easily manage and 
+ control Amazon machines from the command line.
+
+
