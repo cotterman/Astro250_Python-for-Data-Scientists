@@ -40,9 +40,9 @@ def make_plots(num_darts_list, execution_times_simple, execution_times_multip, e
     simulation_rates_multip = []
     simulation_rates_parallel = []
     for i in range(len(num_darts_list)):
-        simulation_rates_simple.append( num_darts_list[i]/execution_times_simple[i] )
-        simulation_rates_multip.append( num_darts_list[i]/execution_times_multip[i] )
-        simulation_rates_parallel.append( num_darts_list[i]/execution_times_parallel[i] )
+        simulation_rates_simple.append( execution_times_simple[i] / num_darts_list[i] )
+        simulation_rates_multip.append( execution_times_multip[i] / num_darts_list[i] )
+        simulation_rates_parallel.append( execution_times_parallel[i] / num_darts_list[i] )
 
     f, ax = plt.subplots()
     lns1 = ax.plot(num_darts_list, execution_times_simple, 
