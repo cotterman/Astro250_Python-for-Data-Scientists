@@ -1,0 +1,56 @@
+#import time
+import multiprocessing
+import random
+
+
+NTHREADS = 3
+
+def f(x, y):
+    #fres = sum( i for i in xrange(int(100000000)))
+    #this next line is here just to waste some (random) amount of time
+        #demonstrates that a process, S, started after a process, R,
+        #might finish before process R and we can see this in the 
+        #ordering of the results.  
+    fres = sum( i for i in xrange(int(100000000*random.random())) )
+    return x
+
+def worker(input_queue, ip_queue_lock, output_queue, op_queue_lock):
+    # loop until the queue is empty, and we can exit
+    while True:
+        # the lock is implicitly released when we exit from the with block
+        with ip_queue_lock:
+            # if there's nothing left to process, we're done,
+            # so return from the worker function
+            if len(input_queue) == 0: 
+                return
+            # get the arguments to pass to f
+            args = input_queue.pop()
+        
+        # outside of the lock, run f 
+            #(we want different processes to be able to run f simultaneously)
+        res = f(*args)
+        with op_queue_lock:
+            output_queue.append( res )
+
+manager = multiprocessing.Manager()
+input_queue = manager.list()
+ip_queue_lock = multiprocessing.Lock()
+output_queue = manager.list()
+op_queue_lock = multiprocessing.Lock()
+
+for i in xrange(8): 
+    input_queue.append((i,i))
+
+ps = []
+for i in xrange(NTHREADS):
+    p = multiprocessing.Process(target=worker, args=(
+        input_queue, ip_queue_lock, output_queue, op_queue_lock))
+    p.start()
+    ps.append( p )
+
+# wait for the children processes to terminate
+for p in ps: 
+    p.join()
+
+print "list of processes: " , ps
+print "List of results: " , output_queue

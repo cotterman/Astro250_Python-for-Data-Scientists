@@ -19,5 +19,13 @@ My machine specifications:
 ######################## Stuff I learned ######################################
 ###############################################################################
 
+#My notes on how multiprocessing code works are found in "example.py"
+
+#Useful trick to obtain timing info for python program:
+    Instead of running by this command:
+    $ python myprogram.py
+    Do this (will provide real, user, and system run times):
+    $ time python myprogram.py
+
 #starcluster is a tool that allows you to easily manage and 
  control Amazon machines from the command line.
