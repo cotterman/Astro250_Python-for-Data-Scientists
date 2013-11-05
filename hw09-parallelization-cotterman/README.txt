@@ -29,9 +29,8 @@ RESULTS:
         as the simple serial method.
         This 2x speedup is as expected because my laptop has 2 separate cores
          (it advertises itself as having 4 cores, but effectively has just 2)
-    #The simulation rate (darts per second) eventually converges for all methods
-        as the overhead time becomes negligible.
-    
+    #The simulation rate (darts per second) eventually converges for parallel methods
+        as the overhead time becomes negligible relative to run time of procedure.
 
 My machine specifications:
     Operating system: Ubuntu 13.04
@@ -54,18 +53,18 @@ My machine specifications:
 gives you the time it takes to calculate 4+6
 
 #Not used for this assignment is a simple-to-use module called numexpr.
-#Here is how to use it:
->>> import numpy as np
->>> import numexpr as ne
->>> a = np.arange (1 e6 )
->>> b = np.arange (1 e6 )
->>> ne.set _num_threads(4) #set number of threads to use
->>> ne.evaluate ( "a **2 + b **2 + 2* a * b" )
-#the above line gives same result as (but in less time):
->>> a **2 + b **2 + 2* a * b
-#check the time differences:
->>> timeit a **2 + b **2 + 2* a * b
->>> timeit ne.evaluate ( "a **2 + b **2 + 2* a * b" )
+ #Here is how to use it:
+    >>> import numpy as np
+    >>> import numexpr as ne
+    >>> a = np.arange (1 e6 )
+    >>> b = np.arange (1 e6 )
+    >>> ne.set _num_threads(4) #set number of threads to use
+    >>> ne.evaluate ( "a **2 + b **2 + 2* a * b" )
+    #the above line gives same result as (but in less time):
+    >>> a **2 + b **2 + 2* a * b
+    #check the time differences:
+    >>> timeit a **2 + b **2 + 2* a * b
+    >>> timeit ne.evaluate ( "a **2 + b **2 + 2* a * b" )
 
 #starcluster is a tool that allows you to easily manage and 
  control Amazon machines from the command line.

@@ -155,44 +155,24 @@ def make_plots(num_darts_list, execution_times_simple, execution_times_multip, e
 
     print "num_darts_list: " , num_darts_list
     print "length of num_darts_list: " , len(num_darts_list)
-    print "length of execution_times_simple: " , len(execution_times_simple)
-    print "length of execution_times_multip: " , len(execution_times_multip)
-    print "length of execution_times_parallel: " , len(execution_times_parallel)
-
 
     for i in range(len(num_darts_list)):
-        if num_darts_list[i] >= 100 and num_darts_list[i] <= 1000:
-            print "float(num_darts_list[i]/execution_times_simple[i] = " , float(num_darts_list[i]) , "/" , execution_times_simple[i]
-            print "= " ,  float(num_darts_list[i])/execution_times_simple[i] 
-            print "float(num_darts_list[i]/execution_times_multip[i] = " , float(num_darts_list[i]) , "/" , execution_times_multip[i]
-            print "= " ,  float(num_darts_list[i])/execution_times_multip[i] 
-            print "float(num_darts_list[i]/execution_times_parallel[i] = " , float(num_darts_list[i]) , "/" , execution_times_parallel[i]
-            print "= " ,  float(num_darts_list[i])/execution_times_parallel[i] 
         simulation_rates_simple.append( float(num_darts_list[i])/execution_times_simple[i] )
         simulation_rates_multip.append( float(num_darts_list[i])/execution_times_multip[i] )
         simulation_rates_parallel.append( float(num_darts_list[i])/execution_times_parallel[i] )
 
-    print "length of simulation_rates_simple: " , len(simulation_rates_simple)
-    print "length of simulation_rates_multip: " , len(simulation_rates_multip)
-    print "length of simulation_rates_parallel: " , len(simulation_rates_parallel)
-
     print "simulation_rates_simple: " , simulation_rates_simple
-    #print "simulation_rates_multip: " , simulation_rates_multip
-    #print "simulation_rates_parallel: " , simulation_rates_parallel
+    print "simulation_rates_multip: " , simulation_rates_multip
+    print "simulation_rates_parallel: " , simulation_rates_parallel
 
     #manually switch everything to log scale
-
     lnum_darts_list = [math.log(x,10) for x in num_darts_list]
-
     lsimulation_rates_simple = [math.log(x,10) for x in simulation_rates_simple]
     lsimulation_rates_multip = [math.log(x,10) for x in simulation_rates_multip]
     lsimulation_rates_parallel = [math.log(x,10) for x in simulation_rates_parallel]
-
     lexecution_times_simple = [math.log(x,10) for x in execution_times_simple]
     lexecution_times_multip = [math.log(x,10) for x in execution_times_multip]
     lexecution_times_parallel = [math.log(x,10) for x in execution_times_parallel]
-
-    print "log(simulation_rates_simple): " , lsimulation_rates_simple
 
     f, ax = plt.subplots()
     lns1 = ax.plot(lnum_darts_list, lexecution_times_simple, 
@@ -212,7 +192,7 @@ def make_plots(num_darts_list, execution_times_simple, execution_times_multip, e
                                    
     lns = lns1+lns2+lns3
     labs = [l.get_label() for l in lns]
-    ax.legend(lns, labs, loc='center left', frameon=False, fontsize='small')
+    ax.legend(lns, labs, loc='lower right', frameon=False, fontsize='small')
 
     ax.set_title('Parallelization Performance', fontsize='x-large', fontname='serif', weight='semibold')
     ax.set_xlabel('log(Number of Darts)')
@@ -220,6 +200,7 @@ def make_plots(num_darts_list, execution_times_simple, execution_times_multip, e
     ax2.set_ylabel('log(Simulation Rates (darts per second)), dashed line')
     ax2.set_yticks(range(2,8))
     
+    #this code caused problems, as it only scaled the simple method on secondary axis
     #ax.set_xlim(10,10000)
     #ax.set_xscale('log')
     #ax.set_yscale('log')
