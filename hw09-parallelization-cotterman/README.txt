@@ -18,20 +18,20 @@ $ ipcluster stop
 ###############################################################################
 
 RESULTS:
-    #My program produces the graph "parallelization_results.png"
-    #When throwing few darts (<10,000), I find that no parallelization
+    #My program produces the graph "parallelization_results_v2.png"
+        # _v1 is messed up b/c of problem with ax2.set_yscale('log')
+            (I will ask about this during the next office hours) 
+        # _v2 has scaling fixed by avoiding the set_yscale method altogether
+    #When throwing few darts (<10,000), I find that no-parallelization
         is faster than both of the parallelization methods (lower execution times).  
     #When throwing more than 100,000 darts, the benefits of parallelization
         overwhelm the overhead of these methods, and they are about twice as fast
         as the simple serial method.
-        This speedup is as expected because my laptop has 2 separate cores
+        This 2x speedup is as expected because my laptop has 2 separate cores
          (it advertises itself as having 4 cores, but effectively has just 2)
-    #My "simulation rates" are messed up and I do not know why!!!
-        This should be a very straight foward computation and I do not know
-        why I get values inconsistent with the execution times. 
-        (I am simply taking num_darts_list/execution_times)
-        #so clearly when execution times are lower,
-        the simulation rate should be higher, and vice versa. 
+    #The simulation rate (darts per second) eventually converges for all methods
+        as the overhead time becomes negligible.
+    
 
 My machine specifications:
     Operating system: Ubuntu 13.04
@@ -75,4 +75,13 @@ gives you the time it takes to calculate 4+6
 #################### Questions pertaining to this unit ########################
 ###############################################################################
 
-See top of exper_ipython.py
+(I'll come to office hours to ask about these next week)
+
+#My graphed "simulation rates" are messed up in "parallelization_results_v1.png"
+    It seems that ax2.set_yscale('log') scaled values for the simple simulation
+     line, but not for the Icluster or multiprocessor lines.
+    How can I fix this without actually scaling all numbers myself??
+
+#See top of exper_ipython.py for quesitons regarding dview and map??
+
+
