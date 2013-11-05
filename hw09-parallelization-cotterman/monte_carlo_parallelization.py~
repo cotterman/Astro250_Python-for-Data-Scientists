@@ -23,6 +23,9 @@ from time import time
 import multiprocessing
 from multiprocessing import Pool, Process, Queue, Pipe
 
+from IPython import parallel
+from IPython.display import display
+
 
 def simple_method(num_darts):
 
@@ -35,10 +38,12 @@ def simple_method(num_darts):
     return execution_time
 
 def darts_in_circle(num_darts):
+    import random
+    import math
     num_darts_in_circle = 0
     for n in xrange(num_darts):
-        x, y = uniform(-1,1), uniform(-1,1)
-        if sqrt(x**2 + y**2)<1:
+        x, y = random.uniform(-1,1), random.uniform(-1,1)
+        if math.sqrt(x**2 + y**2)<1:
             num_darts_in_circle +=1
     return num_darts_in_circle
 
@@ -48,6 +53,29 @@ def find_pi(num_darts):
     num_darts_in_circle = darts_in_circle(num_darts)
     pi_approx = ( num_darts_in_circle/float(num_darts) ) * 4
     return pi_approx
+
+
+def do_parallel(num_darts_total):
+
+    start_time = time()
+
+    rc = parallel.Client()
+    dview = rc[:]
+    nnod = len(dview) #number of engines (selected from commandline - see README)
+    num_darts_divided =  math.trunc( float(num_darts_total) / nnod )
+
+    #note syntax: nnod*[num_darts_divided] creates a list of length nnod with
+        #each element having a value of num_darts_divided
+    circle_total = sum( dview.map_sync(darts_in_circle, nnod*[num_darts_divided]) )
+
+    #in case num_darts_total was not divisible by nnod, calculate darts thrown
+    num_darts_total = num_darts_divided * nnod
+    pi_approx = ( circle_total/float(num_darts_total) ) * 4
+    print "Approx pi, parallel: " , pi_approx
+    
+    end_time = time()
+    execution_time = end_time - start_time
+    return execution_time
 
 
 def worker(input_queue, ip_queue_lock, output_queue, op_queue_lock):
@@ -126,19 +154,19 @@ def make_plots(num_darts_list, execution_times_simple, execution_times_multip, e
 
     f, ax = plt.subplots()
     lns1 = ax.plot(num_darts_list, execution_times_simple, 
-                   label='Simple', color='b')
+                   label='Simple', color='r')
     lns2 = ax.plot(num_darts_list, execution_times_multip, 
                    label='Multiprocessing', color='c')
     lns3 = ax.plot(num_darts_list, execution_times_parallel,
-                    label='IPcluster', color='r')
+                    label='IPcluster', color='g')
 
     ax2 = ax.twinx()
-    lns4 = ax2.plot(num_darts_list, simulation_rates_simple, linestyle='--',
-                   label='Simple', color='b')
+    lns4 = ax2.plot(num_darts_list, simulation_rates_simple, linestyle='--', 
+                    color='r')
     lns5 = ax2.plot(num_darts_list, simulation_rates_multip, linestyle='--',
-                   label='Multiprocessing', color='c')
+                    color='c')
     lns6 = ax2.plot(num_darts_list, simulation_rates_parallel, linestyle='--',
-                    label='IPcluster', color='r')
+                    color='g')
                                    
     lns = lns1+lns2+lns3
     labs = [l.get_label() for l in lns]
@@ -148,6 +176,10 @@ def make_plots(num_darts_list, execution_times_simple, execution_times_multip, e
     ax.set_xlabel('Number of Darts')
     ax.set_ylabel('Execution Times (seconds), solid line')
     ax2.set_ylabel('Simulation Rates (darts per second), dashed line')
+    
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax2.set_yscale('log')
 
     plt.savefig('parallelization_results.png')
 
@@ -164,7 +196,7 @@ def main():
     #parallelization. Also, keep track of the simulation rate (darts thrown per
     #second). 
 
-    num_darts_list = [100, 1000, 10000, 100000, 1000000, 10000000]
+    num_darts_list = [100, 1000, 10000, 100000, 1000000]
     #num_darts_list = [1000]
 
     #1) No parallelization
@@ -184,7 +216,9 @@ def main():
     #3) IPython parallel 
     
     execution_times_parallel = []
-    execution_times_parallel = [10, 10, 10, 10, 10, 10]
+    for num_darts in num_darts_list:
+        execution_times_parallel.append( do_parallel(num_darts) )
+    print "Execution times, ipython parallel: " , execution_times_parallel
 
     #Plot execution time and simulation rate as a function of number of darts
     #for all 3 methods. If you calculated std deviations, use errorbar plots.

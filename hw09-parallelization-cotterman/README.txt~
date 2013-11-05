@@ -5,6 +5,11 @@
 
 My solution code is named "monte_carlo_parallelization.py"
 
+#To use IPython for parallel computing, you need to start one instance of 
+ the controller and one or more instances of the engine. 
+#To start the IPython controller and 4 IPython engines:
+$ ipcluster start -n 4
+
 RESULTS:
     My program produces the graph "parallelization_results.png"
     I find that 
@@ -19,11 +24,29 @@ My machine specifications:
 ######################## Stuff I learned ######################################
 ###############################################################################
 
-#starcluster is a tool that allows you to easily manage and 
- control Amazon machines from the command line.
+#My notes on how multiprocessing code works are found in "example.py"
 
 #Useful trick to obtain timing info for python program:
-Instead of running by this command:
-$ python myprogram.py
-Do this (will provide real, user, and system run times):
-$ time python myprogram.py
+    will execute myprogram.py and provide real, user, and system run times:
+    $ time python myprogram.py
+
+#from within python, you can use the timeit.  For example:
+>>> timeit 4+6
+gives you the time it takes to calculate 4+6
+
+#Not used for this assignment is a simple-to-use module called numexpr.
+#Here is how to use it:
+>>> import numpy as np
+>>> import numexpr as ne
+>>> a = np.arange (1 e6 )
+>>> b = np.arange (1 e6 )
+>>> ne.set _num_threads(4) #set number of threads to use
+>>> ne.evaluate ( "a **2 + b **2 + 2* a * b" )
+#the above line gives same result as (but in less time):
+>>> a **2 + b **2 + 2* a * b
+#check the time differences:
+>>> timeit a **2 + b **2 + 2* a * b
+>>> timeit ne.evaluate ( "a **2 + b **2 + 2* a * b" )
+
+#starcluster is a tool that allows you to easily manage and 
+ control Amazon machines from the command line.
