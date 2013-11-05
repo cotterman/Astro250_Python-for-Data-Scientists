@@ -28,7 +28,8 @@ from IPython.display import display
 
 
 def simple_method(num_darts):
-
+    """ Execute dart-throwing monte carlo with no parallelization
+    """
     start_time = time()
 
     pi_approx = find_pi(num_darts)
@@ -38,6 +39,8 @@ def simple_method(num_darts):
     return execution_time
 
 def darts_in_circle(num_darts):
+    """Throw specified number of darts. Count number that fall in circle.
+    """
     import random
     import math
     num_darts_in_circle = 0
@@ -56,7 +59,8 @@ def find_pi(num_darts):
 
 
 def do_parallel(num_darts_total):
-
+    """Use ipython's parallel module to run monte carlo simulation.
+    """
     start_time = time()
 
     rc = parallel.Client()
@@ -71,7 +75,6 @@ def do_parallel(num_darts_total):
     #in case num_darts_total was not divisible by nnod, calculate darts thrown
     num_darts_total = num_darts_divided * nnod
     pi_approx = ( circle_total/float(num_darts_total) ) * 4
-    print "Approx pi, parallel: " , pi_approx
     
     end_time = time()
     execution_time = end_time - start_time
@@ -79,6 +82,7 @@ def do_parallel(num_darts_total):
 
 
 def worker(input_queue, ip_queue_lock, output_queue, op_queue_lock):
+
     # loop until the queue is empty, and we can exit
     while True:
         # the lock is implicitly released when we exit from the with block
@@ -98,6 +102,8 @@ def worker(input_queue, ip_queue_lock, output_queue, op_queue_lock):
 
 def do_multip(num_darts_total, NTHREADS):
 
+    """Use python's multiprocessing module to run monte carlo simulation.
+    """
     start_time = time()
 
     manager = multiprocessing.Manager()
@@ -114,8 +120,8 @@ def do_multip(num_darts_total, NTHREADS):
             input_queue.append(num_darts_divided)
         else:
             input_queue.append(num_darts_divided + remainder)
-    print "Total number of darts thrown: " , num_darts_total
-    print "Input queue: " , input_queue
+    #print "Total number of darts thrown: " , num_darts_total
+    #print "Input queue: " , input_queue
 
     ps = []
     for i in xrange(NTHREADS):
@@ -127,15 +133,13 @@ def do_multip(num_darts_total, NTHREADS):
     # wait for the children processes to terminate
     for p in ps: 
         p.join()
-
-    print "output list: " , output_queue
+    #print "output list: " , output_queue
 
     #tally results from each process to find pi
     circle_total = 0
     for circle_count in output_queue:
         circle_total += circle_count
     pi_approx = ( circle_total/float(num_darts_total) ) * 4
-    print "Pi approximation: " , pi_approx
 
     end_time = time()
     execution_time = end_time - start_time
@@ -143,14 +147,21 @@ def do_multip(num_darts_total, NTHREADS):
 
 
 def make_plots(num_darts_list, execution_times_simple, execution_times_multip, execution_times_parallel):
-    
+    """Plot execution times for various runs
+    """
     simulation_rates_simple = []
     simulation_rates_multip = []
     simulation_rates_parallel = []
+    print "num_darts_list: " , num_darts_list
+
     for i in range(len(num_darts_list)):
-        simulation_rates_simple.append( num_darts_list[i]/execution_times_simple[i] )
-        simulation_rates_multip.append( num_darts_list[i]/execution_times_multip[i] )
-        simulation_rates_parallel.append( num_darts_list[i]/execution_times_parallel[i] )
+        simulation_rates_simple.append( float(num_darts_list[i])/execution_times_simple[i] )
+        simulation_rates_multip.append( float(num_darts_list[i])/execution_times_multip[i] )
+        simulation_rates_parallel.append( float(num_darts_list[i])/execution_times_parallel[i] )
+
+    print "simulation_rates_simple: " , simulation_rates_simple
+    print "simulation_rates_multip: " , simulation_rates_multip
+    print "simulation_rates_parallel: " , simulation_rates_parallel
 
     f, ax = plt.subplots()
     lns1 = ax.plot(num_darts_list, execution_times_simple, 
@@ -180,8 +191,9 @@ def make_plots(num_darts_list, execution_times_simple, execution_times_multip, e
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax2.set_yscale('log')
+    ax2.set_ylim(10e1,10e6)
 
-    plt.savefig('parallelization_results.png')
+    plt.savefig('parallelization_results_v3.png')
 
 
 def main():
@@ -196,8 +208,11 @@ def main():
     #parallelization. Also, keep track of the simulation rate (darts thrown per
     #second). 
 
-    num_darts_list = [100, 1000, 10000, 100000, 1000000]
-    #num_darts_list = [1000]
+    num_darts_list = range(10,100,10)+\
+                     range(100,1000,100)+\
+                     range(1000,10000,1000)+\
+                     range(int(1e4),int(1e5),int(1e4))+\
+                     range(int(1e5),int(1e6),int(1e5))
 
     #1) No parallelization
 

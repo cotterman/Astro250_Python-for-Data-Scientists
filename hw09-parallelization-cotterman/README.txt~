@@ -5,14 +5,33 @@
 
 My solution code is named "monte_carlo_parallelization.py"
 
-#To use IPython for parallel computing, you need to start one instance of 
- the controller and one or more instances of the engine. 
-#To start the IPython controller and 4 IPython engines:
+#To use IPython for parallel computing (which I do), you need to start 
+ one instance of the controller and one or more instances of the engine. 
+#To start the IPython controller and 4 IPython engines, run this:
 $ ipcluster start -n 4
 
+You are now ready to run monte_carlo_parallelization.py in the usual fashion.
+
+#after running the program, you should stop the engines via this command:
+$ ipcluster stop
+
+###############################################################################
+
 RESULTS:
-    My program produces the graph "parallelization_results.png"
-    I find that 
+    #My program produces the graph "parallelization_results.png"
+    #When throwing few darts (<10,000), I find that no parallelization
+        is faster than both of the parallelization methods (lower execution times).  
+    #When throwing more than 100,000 darts, the benefits of parallelization
+        overwhelm the overhead of these methods, and they are about twice as fast
+        as the simple serial method.
+        This speedup is as expected because my laptop has 2 separate cores
+         (it advertises itself as having 4 cores, but effectively has just 2)
+    #My "simulation rates" are messed up and I do not know why!!!
+        This should be a very straight foward computation and I do not know
+        why I get inconsistent values 
+        (I am simply taking num_darts_list/execution_times)
+        #clearly, when execution times are lower for the serial method,
+        the simulation rate should be higher, and vice versa. 
 
 My machine specifications:
     Operating system: Ubuntu 13.04
@@ -50,3 +69,10 @@ gives you the time it takes to calculate 4+6
 
 #starcluster is a tool that allows you to easily manage and 
  control Amazon machines from the command line.
+
+
+###############################################################################
+#################### Questions pertaining to this unit ########################
+###############################################################################
+
+See top of exper_ipython.py
