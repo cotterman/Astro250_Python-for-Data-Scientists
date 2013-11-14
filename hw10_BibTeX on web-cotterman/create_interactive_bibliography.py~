@@ -10,24 +10,75 @@
 ###############################################################################
 
 from flask import Flask, redirect, request, url_for
+import sqlite3 
+import scipy
 
 app = Flask(__name__)
 app.debug = True
 
-## we can tell our view functions what HTTP methods it
-## is allowed to respond to
+#this will open up a SQLite database.  
+    #Just do this once  -- re-opening is costly and pointless
+#connection = sqlite3.connect("bibliography.db")
+
+
+def create_table():
+    connection = sqlite3.connect("bibliography.db")
+    cursor = connection.cursor() #begin my transaction 
+
+    #not allowed to make a table that already exists.
+    #so, drop the table if it exists already, otherwise do not throw error.
+    sql_cmd = """
+    DROP TABLE biblio;
+    """
+    try: 
+        cursor.execute(sql_cmd)
+    except Exception, inst:
+        print "Caught Exception: ", inst
+        connection.rollback() 
+    
+    #sql_cmd = """
+    #CREATE TABLE biblio (
+    #    citation_tag TEXT,
+     #   author_list TEXT, 
+      #  journal TEXT,
+       # volume TEXT, 
+       # pages TEXT, 
+       # year INT, 
+       # title TEXT, 
+       # collection TEXT);
+    #"""
+    sql_cmd = """ CREATE TABLE biblio (collection TEXT); """
+    cursor.execute(sql_cmd) #do sql_cmd in my current transaction
+    print "biblio table has been created"
+
+#the browser makes either a post or a get request
+    #simply going to the webpage initiates a GET request
 @app.route('/welcomeyo', methods=['GET', 'POST'])
 def welcomehi():
-
+    #a POST allows me to post additional info (not gathered from server)
     if request.method == 'POST':
-	    collectionname = request.form['cname']
-	    if collectionname not in (""," ",None):
-	    	return "Your collections: %s" % collectionname
-	    else:
-	    	return """Database is empty.  Please add a collection name and upload corresponding BibTeX file
+        collectionname = request.form['cname']
+        if collectionname not in (""," ",None):
+            print "I am here"
+            connection = sqlite3.connect("bibliography.db")
+            cursor = connection.cursor() #begin my transaction
+            sql_cmd = """
+                INSERT INTO biblio (collection) VALUES ('%s') 
+                """ % collectionname
+            #sql_cmd = """ DROP TABLE biblio;"""
+            #sql_cmd = """CREATE TABLE tester (tname TEXT);"""
+            cursor.execute(sql_cmd)
+            connection.commit()
+            sql_cmd = """SELECT collection FROM biblio """
+            cursor.execute(sql_cmd)
+            db_info = cursor.fetchall()
+            return "Your collections: %s" % db_info
+        else:
+            return """Please add a collection name and upload corresponding BibTeX file
 	    	          <a href='%s'>here</a>""" % url_for("welcomehi")
-    else:
-    	## this is a normal GET request
+    elif request.method == 'GET':
+    	## this is a normal GET request from the browser to flask
+        #this is html
         return '''
             <form action="welcomeyo" method="POST">
             What is the name of your collection?
@@ -41,6 +92,7 @@ def redirect_to_login():
 	return redirect(url_for("welcomehi"),301)
 
 if __name__ == "__main__":
+    create_table()
     app.run()
 
 # Upon insertion, each set of bibliography entries (contained within the .bib

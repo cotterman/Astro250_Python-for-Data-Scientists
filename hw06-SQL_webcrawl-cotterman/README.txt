@@ -98,7 +98,9 @@ RESULTS:
         #note: it is cumbersome to setup a PostgreSQL database, which is necessary
             for using PyGreSQL.  But, if you know someone amazing who will
             set one up for you, then using it with PyGreSQL is just like using sqlite
-            (but with access to more built-in libraries/ functions)        
+            (but with access to more built-in libraries/ functions)   
+    #SQLAlchemy is not recommended. It tries to write the queries for you and 
+        might not write them how you want -- can introduce inefficiencies     
 
 ## From within the database itself:
     #psql
