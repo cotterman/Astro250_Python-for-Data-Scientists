@@ -18,6 +18,7 @@
 #User can do the following (per assignment's instructions):
     #Upload .bib file, provide corresponding collection name, 
         and have contents go into database
+        #Note: uploaded files will be saved to folder in which script is located
     #View a list of the collections that database contains
     #Query database
 

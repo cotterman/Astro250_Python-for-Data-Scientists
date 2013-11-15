@@ -25,10 +25,6 @@ ALLOWED_EXTENSIONS = set(['txt', 'bib'])
 app = Flask(__name__) #this initializes an instance of the Flask object
 app.debug = True
 
-#this will open up a SQLite database.  
-    #Just do this once  -- re-opening is costly and pointless
-#connection = sqlite3.connect("bibliography.db")
-
 
 def create_table():
     connection = sqlite3.connect("bibliography.db")
@@ -238,16 +234,4 @@ if __name__ == "__main__":
     create_table()
     app.run()
 
-# Upon insertion, each set of bibliography entries (contained within the .bib
-# file) is a "collection", and the collection name is provided by the user. 
-
-# The database must have columns for citation tag, author list, journal,
-# volume, pages, year, title, and collection. The website provides a
-# query interface by passing user-entered SQL statements to sqlite3.
-
-# Use third party Python module pybtex to parse the BibTeX files.
-
-# You'll need to look up how to upload a file through flask and how/
-# where to use POST or GET methods. Check out the official flask
-# documentation for information on this stuff. 
 
