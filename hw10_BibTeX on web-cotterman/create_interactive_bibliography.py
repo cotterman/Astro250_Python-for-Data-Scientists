@@ -70,8 +70,8 @@ def view_collections():
     cursor.execute(sql_cmd)
     db_info = cursor.fetchall()
     if db_info==[]:
-        return """I pity you fool for having no collections.  Add one
-    	          <a href='%s'>here</a>""" % url_for("upload_file")
+        return """<h1>I pity you fool for having no collections.</h1>  
+                    Add one <a href='%s'>here</a>""" % url_for("upload_file")
     else:
         nodups = set(db_info)
         return '''<h1>You have the following collections: %s .</h1>  
@@ -137,7 +137,7 @@ def addcollection():
     #print "Print bib_data.entries.keys(): " , bib_data.entries.keys()
     for key in bib_data.entries.keys():
         print "key: " , key
-        print "title: " , bib_data.entries[key].fields['title']
+        #print "title: " , bib_data.entries[key].fields['title']
         #return str(bib_data.entries[key].persons['author'])
     print "read in all keys, no prob"
 
@@ -146,16 +146,42 @@ def addcollection():
     for key in bib_data.entries.keys():
         #create columns for citation tag, author list, journal, volume, pages, year, title, and collection
         citation_tag = key
+        try:
+            author_list = str(bib_data.entries[key].persons['author'])
+        except KeyError: 
+            print "missing author"
+            continue
+        try:
+            journal = bib_data.entries[key].fields['journal']
+        except KeyError: 
+            print "missing journal"
+            continue
+        try:
+            volume = bib_data.entries[key].fields['volume']
+        except KeyError: 
+            print "missing volume"
+            continue
+        try:
+            pages = bib_data.entries[key].fields['pages']
+        except KeyError: 
+            print "missing pages"
+            continue
+        try:
+            year = int(bib_data.entries[key].fields['year'])
+        except KeyError: 
+            print "missing year"
+            continue
         title = bib_data.entries[key].fields['title']
         collection = cname
-        print "progress"
-        #data = (citation_tag, author_list, journal, volume, pages, year, title, collection)
-        #sql_cmd = ("INSERT INTO biblio (citation_tag, author_list, journal, volume, pages, year, title, collection) VALUES " + str(data))
-        data = (citation_tag, title, collection)
+        print "got data"
+
+        data = (citation_tag, author_list, journal, volume, pages, year, title, collection)
         print "data: " , data
-        sql_cmd = "INSERT INTO biblio (citation_tag, title, collection) VALUES (?, ?, ?)"
+        sql_cmd = '''
+            INSERT INTO biblio (citation_tag, author_list, journal, volume, pages, year, title, collection) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)'''
         cursor.execute(sql_cmd, data)
-        print "success"
+        print "inserted into table"
     connection.commit()
 
 
