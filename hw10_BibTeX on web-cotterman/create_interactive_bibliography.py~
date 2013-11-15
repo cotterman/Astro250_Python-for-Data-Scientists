@@ -74,8 +74,10 @@ def view_collections():
     	          <a href='%s'>here</a>""" % url_for("upload_file")
     else:
         nodups = set(db_info)
-        return "Your collections: %s" % "\t".join( x[0] for x in nodups )
-        
+        return '''<h1>You have the following collections: %s .</h1>  
+                Click <a href='%s'>here</a> to continue
+                ''' % (", \t".join( x[0] for x in nodups ), url_for("welcomehi"))
+                
 
 #the browser makes either a post or a get request
     #simply going to the webpage initiates a GET request
