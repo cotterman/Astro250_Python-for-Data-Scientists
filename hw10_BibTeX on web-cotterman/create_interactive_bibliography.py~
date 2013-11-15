@@ -12,8 +12,11 @@
 from flask import Flask, redirect, request, url_for
 import sqlite3 
 import scipy
+import os
+from werkzeug import secure_filename
 
-app = Flask(__name__)
+#__name__ refers to the name of the script that I am running
+app = Flask(__name__) #this initializes an instance of the Flask object
 app.debug = True
 
 #this will open up a SQLite database.  
@@ -55,6 +58,7 @@ def create_table():
     #simply going to the webpage initiates a GET request
 @app.route('/welcomeyo', methods=['GET', 'POST'])
 def welcomehi():
+
     #a POST allows me to post additional info (not gathered from server)
     if request.method == 'POST':
         collectionname = request.form['cname']
@@ -65,8 +69,6 @@ def welcomehi():
             sql_cmd = """
                 INSERT INTO biblio (collection) VALUES ('%s') 
                 """ % collectionname
-            #sql_cmd = """ DROP TABLE biblio;"""
-            #sql_cmd = """CREATE TABLE tester (tname TEXT);"""
             cursor.execute(sql_cmd)
             connection.commit()
             sql_cmd = """SELECT collection FROM biblio """
@@ -76,20 +78,72 @@ def welcomehi():
         else:
             return """Please add a collection name and upload corresponding BibTeX file
 	    	          <a href='%s'>here</a>""" % url_for("welcomehi")
+
     elif request.method == 'GET':
     	## this is a normal GET request from the browser to flask
         #this is html
         return '''
-            <form action="welcomeyo" method="POST">
+            <form action="getbibfile" method="GET">
             What is the name of your collection?
             <input type="text" name="cname" />
             <input type="submit" />
             </form>'''
 
+def allowed_file(filename, ALLOWED_EXTENSIONS):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+@app.route('/upload', methods=['GET',])
+def upload_file():
+    return '''
+    <!doctype html>
+    <title>Upload new File</title>
+    <h1>Upload BibTeX file to add to bibliogrpahy</h1>
+    <form action="namecollection" method=post enctype=multipart/form-data>
+      <p><input type=file name=file>
+         <input type=submit value=Upload>
+    </form>
+    '''
+
+@app.route('/namecollection', methods=['POST',])
+def namecollection():
+    """ Upload bibTeX file """
+    
+    # saves the file
+    UPLOAD_FOLDER = os.path.dirname(os.path.abspath(__file__)) # leads to path of script
+    ALLOWED_EXTENSIONS = set(['txt', 'bib'])
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    assert request.method == 'POST'
+    file = request.files['file']
+    if file and allowed_file(file.filename, ALLOWED_EXTENSIONS):
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    
+    print "name of file that was uploaded: " , filename
+    return '''
+        <form action="addcollection" method="POST">
+        Thank you for uploading your file.  To which collection does it belong?
+        <input type="text" name="cname" />
+        <input type="hidden" name="filename" value="{}" />
+        <input type="submit" />
+        </form>'''.format(filename)
+
+@app.route('/addcollection', methods=['POST',])
+def addcollection():
+    """ Upload bibTeX file """
+    
+    assert request.method == 'POST'
+    filename = request.form['filename']
+    cname = request.form['cname']
+    
+    return '''
+    <h1>Nice!  You just added the contents of {} to the {} collection. </h1>
+    '''.format(filename, cname)
+
 @app.route("/")
 def redirect_to_login():
 	## 301 is an HTTP error code that says don't worry I'll redirect you to another page
-	return redirect(url_for("welcomehi"),301)
+	return redirect(url_for("upload_file"),301)
 
 if __name__ == "__main__":
     create_table()
