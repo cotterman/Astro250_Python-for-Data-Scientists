@@ -78,29 +78,42 @@ def view_collections():
                 Click <a href='%s'>here</a> to continue
                 ''' % (", \t".join( x[0] for x in nodups ), url_for("welcomehi"))
 
-@app.route('/query_db', methods=['GET', ])
+@app.route('/query_db', methods=['GET','POST'])
 def query_db():
     connection = sqlite3.connect("bibliography.db")
     cursor = connection.cursor() #begin my transaction 
 
-    sql_cmd = """
-    SELECT * FROM biblio WHERE year>1995
-    """
-    cursor.execute(sql_cmd)
-    db_info = cursor.fetchall()
-    #print db_info
-    #print type(db_info)
-    if db_info==[]:
-        return '''<h1>Your query returned no results.</h1>
-                    What'd you like to do now?   
-                   <a href='%s'>view list of collections</a> -- or -- 
-                    <a href='%s'>add a collection</a> -- or -- 
-                    <a href='%s'>query bibliography database again</a>
-                ''' % (url_for("view_collections"), url_for("upload_file"), url_for("query_db"))
-    else:
-        return '''<h1>Results of your query:</h1> %s <br><br>
-                Click <a href='%s'>here</a> to continue
-                ''' % (db_info , url_for("welcomehi"))          
+    if request.method=='GET':
+        return '''
+        <form action="query_db" method="POST" >
+            Specify your query using proper SQL syntax:<br>
+          <input type="text" name="where_statement" />
+             <input type="submit" />
+        </form>
+        '''
+    elif request.method=='POST':
+        print "I am here"
+        mywhere = request.form["where_statement"]
+        print "User specified where statement: " , mywhere
+        sql_cmd = """
+            SELECT * FROM biblio WHERE %s
+            """ % mywhere
+        print "Query: " , sql_cmd
+        cursor.execute(sql_cmd)
+        db_info = cursor.fetchall()
+        print db_info
+        print type(db_info)
+        if db_info==[]:
+            return '''<h1>Your query returned no results.</h1>
+                        What'd you like to do now?   
+                       <a href='%s'>view list of collections</a> -- or -- 
+                        <a href='%s'>add a collection</a> -- or -- 
+                        <a href='%s'>query bibliography database again</a>
+                    ''' % (url_for("view_collections"), url_for("upload_file"), url_for("query_db"))
+        else:
+            return '''<h1>Results of your query:</h1> %s <br><br>
+                    Click <a href='%s'>here</a> to continue
+                    ''' % (db_info , url_for("welcomehi"))          
 
 #the browser makes either a post or a get request
     #simply going to the webpage initiates a GET request

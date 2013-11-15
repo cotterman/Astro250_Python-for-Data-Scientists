@@ -12,9 +12,11 @@
     $ python create_interactive_bibliography.py
 #Then, open browser and navigate to 127.0.0.1:5000/welcomeyo to explore functionality
 
-#User can upload .bib file, and I am able to parse the contained bibiolography info
-    from the uploaded file
-#but for some reason I am unable to put this info into my database :(
+#User can upload .bib file
+    #I am able to parse the contained bibiolography info from the uploaded file
+    and put this info into my database
+    #The user can view a list of the collections that her database contains
+    #currently she does not have the ability to query the database, though
 
 
 ###############################################################################
