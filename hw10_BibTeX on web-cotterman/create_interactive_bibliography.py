@@ -15,6 +15,7 @@ import scipy
 import os
 import pybtex
 from werkzeug import secure_filename
+from pybtex.database.input import bibtex
 
 #uploaded files will be saved to this folder
 UPLOAD_FOLDER = os.path.dirname(os.path.abspath(__file__)) # leads to path of script
@@ -44,18 +45,17 @@ def create_table():
         print "Caught Exception: ", inst
         connection.rollback() 
     
-    #sql_cmd = """
-    #CREATE TABLE biblio (
-    #    citation_tag TEXT,
-     #   author_list TEXT, 
-      #  journal TEXT,
-       # volume TEXT, 
-       # pages TEXT, 
-       # year INT, 
-       # title TEXT, 
-       # collection TEXT);
-    #"""
-    sql_cmd = """ CREATE TABLE biblio (collection TEXT); """
+    sql_cmd = """
+    CREATE TABLE biblio (
+        citation_tag TEXT,
+        author_list TEXT, 
+        journal TEXT,
+        volume TEXT, 
+        pages TEXT, 
+        year INT, 
+        title TEXT, 
+        collection TEXT);
+    """
     cursor.execute(sql_cmd) #do sql_cmd in my current transaction
     print "biblio table has been created"
 
@@ -81,7 +81,7 @@ def view_collections():
 @app.route('/welcomeyo', methods=['GET', ])
 def welcomehi():
     return '''
-        What would you like to do?
+        <h1>What would you like to do?</h1>
         You may <a href='%s'>View collections</a> -- or -- 
         <a href='%s'>Add a collection</a>
         ''' % (url_for("view_collections"), url_for("upload_file"))
@@ -128,21 +128,38 @@ def addcollection():
     assert request.method == 'POST'
     filename = request.form['filename']
     cname = request.form['cname']
-    
-    #if collectionname not in (""," ",None):
-    #print "I am here"
-    #connection = sqlite3.connect("bibliography.db")
-    #cursor = connection.cursor() #begin my transaction
-    #sql_cmd = """
-    #    INSERT INTO biblio (collection) VALUES ('%s') 
-    #    """ % collectionname
-    #cursor.execute(sql_cmd)
-    #connection.commit()
+   
+    parser = bibtex.Parser()
+    bib_data = parser.parse_file(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    #print "Print bib_data.entries.keys(): " , bib_data.entries.keys()
+    for key in bib_data.entries.keys():
+        print "key: " , key
+        print "title: " , bib_data.entries[key].fields['title']
+        #return str(bib_data.entries[key].persons['author'])
+    print "read in all keys, no prob"
+
+    connection = sqlite3.connect("bibliography.db")
+    cursor = connection.cursor() #begin my transaction
+    for key in bib_data.entries.keys():
+        #create columns for citation tag, author list, journal, volume, pages, year, title, and collection
+        citation_tag = key
+        title = bib_data.entries[key].fields['title']
+        collection = cname
+        print "progress"
+        #data = (citation_tag, author_list, journal, volume, pages, year, title, collection)
+        #sql_cmd = ("INSERT INTO biblio (citation_tag, author_list, journal, volume, pages, year, title, collection) VALUES " + str(data))
+        data = (citation_tag, title, collection)
+        print "data: " , data
+        sql_cmd = ("INSERT INTO biblio (citation_tag, title, collection) VALUES " + str(data))
+        cursor.execute(sql_cmd)
+        print "success"
+    connection.commit()
+
 
     return '''
     <h1>Nice!  You just added the contents of {} to the {} collection. </h1>
     Click <a href={}>here</a> to continue
-    '''.format(filename, cname, url_for("upload_file"))
+    '''.format(filename, cname, url_for("welcomehi"))
 
 @app.route("/")
 def redirect_to_login():

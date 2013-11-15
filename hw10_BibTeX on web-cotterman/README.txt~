@@ -1,4 +1,7 @@
 
+
+###############################################################################
+
 #My code for this assignment is contained in create_interactive_bibliography.py
 
 #Necessary installations to run this code:
@@ -6,6 +9,13 @@
     sqlite (as in predict_weather.py assignment)
     flask (pip install Flask)
 
-#See "lecture notes web.txt" for my expanded notes on all this web stuff
+#User can upload file, and I am able to parse the contained bibiolography info
+    from the uploaded file
+#but for some reason I am unable to put this info into my database :(
+
+
+###############################################################################
+
+#"lecture notes web.txt" contains my expanded notes on all this web stuff
     
 
