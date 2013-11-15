@@ -48,7 +48,7 @@ def create_table():
     sql_cmd = """
     CREATE TABLE biblio (
         citation_tag TEXT,
-        author_list LIST, 
+        author_list TEXT, 
         journal TEXT,
         volume TEXT, 
         pages TEXT, 
@@ -77,7 +77,30 @@ def view_collections():
         return '''<h1>You have the following collections: %s .</h1>  
                 Click <a href='%s'>here</a> to continue
                 ''' % (", \t".join( x[0] for x in nodups ), url_for("welcomehi"))
-                
+
+@app.route('/query_db', methods=['GET', ])
+def query_db():
+    connection = sqlite3.connect("bibliography.db")
+    cursor = connection.cursor() #begin my transaction 
+
+    sql_cmd = """
+    SELECT * FROM biblio WHERE year>1995
+    """
+    cursor.execute(sql_cmd)
+    db_info = cursor.fetchall()
+    #print db_info
+    #print type(db_info)
+    if db_info==[]:
+        return '''<h1>Your query returned no results.</h1>
+                    What'd you like to do now?   
+                   <a href='%s'>view list of collections</a> -- or -- 
+                    <a href='%s'>add a collection</a> -- or -- 
+                    <a href='%s'>query bibliography database again</a>
+                ''' % (url_for("view_collections"), url_for("upload_file"), url_for("query_db"))
+    else:
+        return '''<h1>Results of your query:</h1> %s <br><br>
+                Click <a href='%s'>here</a> to continue
+                ''' % (db_info , url_for("welcomehi"))          
 
 #the browser makes either a post or a get request
     #simply going to the webpage initiates a GET request
@@ -85,9 +108,10 @@ def view_collections():
 def welcomehi():
     return '''
         <h1>What would you like to do?</h1>
-        You may <a href='%s'>View collections</a> -- or -- 
-        <a href='%s'>Add a collection</a>
-        ''' % (url_for("view_collections"), url_for("upload_file"))
+        You may <a href='%s'>view list of collections</a> -- or -- 
+        <a href='%s'>add a collection</a> -- or -- 
+        <a href='%s'>query bibliography database</a>
+        ''' % (url_for("view_collections"), url_for("upload_file"), url_for("query_db"))
 
 def allowed_file(filename, ALLOWED_EXTENSIONS):
     return '.' in filename and \
@@ -118,7 +142,7 @@ def namecollection():
     print "name of file that was uploaded: " , filename
     return '''
         <form action="addcollection" method="POST">
-        Thank you for uploading your file.  To which collection does it belong?
+        Thank you for uploading your file. <br> <br>To which collection does it belong?
         <input type="text" name="cname" />
         <input type="hidden" name="filename" value="{}" />
         <input type="submit" />
@@ -147,7 +171,7 @@ def addcollection():
         #create columns for citation tag, author list, journal, volume, pages, year, title, and collection
         citation_tag = key
         try:
-            author_list = bib_data.entries[key].persons['author']
+            author_list = str(bib_data.entries[key].persons['author'])
         except KeyError: 
             print "missing author"
             continue
