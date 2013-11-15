@@ -73,7 +73,8 @@ def view_collections():
         return """I pity you fool for having no collections.  Add one
     	          <a href='%s'>here</a>""" % url_for("upload_file")
     else:
-        return "Your collections: %s" % db_info
+        nodups = set(db_info)
+        return "Your collections: %s" % "\t".join( x[0] for x in nodups )
         
 
 #the browser makes either a post or a get request
@@ -150,8 +151,8 @@ def addcollection():
         #sql_cmd = ("INSERT INTO biblio (citation_tag, author_list, journal, volume, pages, year, title, collection) VALUES " + str(data))
         data = (citation_tag, title, collection)
         print "data: " , data
-        sql_cmd = ("INSERT INTO biblio (citation_tag, title, collection) VALUES " + str(data))
-        cursor.execute(sql_cmd)
+        sql_cmd = "INSERT INTO biblio (citation_tag, title, collection) VALUES (?, ?, ?)"
+        cursor.execute(sql_cmd, data)
         print "success"
     connection.commit()
 
