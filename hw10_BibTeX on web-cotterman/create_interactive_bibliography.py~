@@ -86,7 +86,9 @@ def query_db():
     if request.method=='GET':
         return '''
         <form action="query_db" method="POST" >
-            Specify your query using proper SQL syntax:<br>
+            <h1> Specify your query using proper SQL syntax. </h1>
+            What you type will follow the keyword WHERE in a SELECT * statement.<br>
+            Example query:  year>1995 <br>
           <input type="text" name="where_statement" />
              <input type="submit" />
         </form>
