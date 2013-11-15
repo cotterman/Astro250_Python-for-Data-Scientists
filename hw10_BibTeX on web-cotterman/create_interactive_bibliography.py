@@ -13,7 +13,12 @@ from flask import Flask, redirect, request, url_for
 import sqlite3 
 import scipy
 import os
+import pybtex
 from werkzeug import secure_filename
+
+#uploaded files will be saved to this folder
+UPLOAD_FOLDER = os.path.dirname(os.path.abspath(__file__)) # leads to path of script
+ALLOWED_EXTENSIONS = set(['txt', 'bib'])
 
 #__name__ refers to the name of the script that I am running
 app = Flask(__name__) #this initializes an instance of the Flask object
@@ -54,40 +59,32 @@ def create_table():
     cursor.execute(sql_cmd) #do sql_cmd in my current transaction
     print "biblio table has been created"
 
+@app.route('/view_collections', methods=['GET', ])
+def view_collections():
+    connection = sqlite3.connect("bibliography.db")
+    cursor = connection.cursor() #begin my transaction 
+
+    sql_cmd = """
+    SELECT collection FROM biblio
+    """
+    cursor.execute(sql_cmd)
+    db_info = cursor.fetchall()
+    if db_info==[]:
+        return """I pity you fool for having no collections.  Add one
+    	          <a href='%s'>here</a>""" % url_for("upload_file")
+    else:
+        return "Your collections: %s" % db_info
+        
+
 #the browser makes either a post or a get request
     #simply going to the webpage initiates a GET request
-@app.route('/welcomeyo', methods=['GET', 'POST'])
+@app.route('/welcomeyo', methods=['GET', ])
 def welcomehi():
-
-    #a POST allows me to post additional info (not gathered from server)
-    if request.method == 'POST':
-        collectionname = request.form['cname']
-        if collectionname not in (""," ",None):
-            print "I am here"
-            connection = sqlite3.connect("bibliography.db")
-            cursor = connection.cursor() #begin my transaction
-            sql_cmd = """
-                INSERT INTO biblio (collection) VALUES ('%s') 
-                """ % collectionname
-            cursor.execute(sql_cmd)
-            connection.commit()
-            sql_cmd = """SELECT collection FROM biblio """
-            cursor.execute(sql_cmd)
-            db_info = cursor.fetchall()
-            return "Your collections: %s" % db_info
-        else:
-            return """Please add a collection name and upload corresponding BibTeX file
-	    	          <a href='%s'>here</a>""" % url_for("welcomehi")
-
-    elif request.method == 'GET':
-    	## this is a normal GET request from the browser to flask
-        #this is html
-        return '''
-            <form action="getbibfile" method="GET">
-            What is the name of your collection?
-            <input type="text" name="cname" />
-            <input type="submit" />
-            </form>'''
+    return '''
+        What would you like to do?
+        You may <a href='%s'>View collections</a> -- or -- 
+        <a href='%s'>Add a collection</a>
+        ''' % (url_for("view_collections"), url_for("upload_file"))
 
 def allowed_file(filename, ALLOWED_EXTENSIONS):
     return '.' in filename and \
@@ -98,7 +95,7 @@ def upload_file():
     return '''
     <!doctype html>
     <title>Upload new File</title>
-    <h1>Upload BibTeX file to add to bibliogrpahy</h1>
+    <h1>Upload BibTeX file to add to bibliography database</h1>
     <form action="namecollection" method=post enctype=multipart/form-data>
       <p><input type=file name=file>
          <input type=submit value=Upload>
@@ -107,18 +104,14 @@ def upload_file():
 
 @app.route('/namecollection', methods=['POST',])
 def namecollection():
-    """ Upload bibTeX file """
-    
+    """ Saves uploaded file and asks for collection name """
     # saves the file
-    UPLOAD_FOLDER = os.path.dirname(os.path.abspath(__file__)) # leads to path of script
-    ALLOWED_EXTENSIONS = set(['txt', 'bib'])
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     assert request.method == 'POST'
     file = request.files['file']
     if file and allowed_file(file.filename, ALLOWED_EXTENSIONS):
         filename = secure_filename(file.filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-    
     print "name of file that was uploaded: " , filename
     return '''
         <form action="addcollection" method="POST">
@@ -136,14 +129,25 @@ def addcollection():
     filename = request.form['filename']
     cname = request.form['cname']
     
+    #if collectionname not in (""," ",None):
+    #print "I am here"
+    #connection = sqlite3.connect("bibliography.db")
+    #cursor = connection.cursor() #begin my transaction
+    #sql_cmd = """
+    #    INSERT INTO biblio (collection) VALUES ('%s') 
+    #    """ % collectionname
+    #cursor.execute(sql_cmd)
+    #connection.commit()
+
     return '''
     <h1>Nice!  You just added the contents of {} to the {} collection. </h1>
-    '''.format(filename, cname)
+    Click <a href={}>here</a> to continue
+    '''.format(filename, cname, url_for("upload_file"))
 
 @app.route("/")
 def redirect_to_login():
 	## 301 is an HTTP error code that says don't worry I'll redirect you to another page
-	return redirect(url_for("upload_file"),301)
+	return redirect(url_for("welcomehi"),301)
 
 if __name__ == "__main__":
     create_table()
