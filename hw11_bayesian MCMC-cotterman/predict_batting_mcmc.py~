@@ -126,11 +126,12 @@ def sample_posterior(cleanD, prior_params):
         if i<3:
             pymc.Matplot.plot(mcmc)
             plt.savefig("trace_plots_" + str(i) + ".pdf")
+            plt.clf()
 
     #4) Compute the posterior mean and posterior 95% CI for each mu_i
         # For how many of the 13 players does the full-season batting average 
         # fall within the 95% CI?
-    print "Number of players for which full-season batting avg is within 95% CI: "
+    print "\nNumber of players for which full-season batting avg is within 95% CI: "
     print truth_in_CI95s.count(True)
 
     players = cleanD.Player.tolist()
@@ -143,7 +144,7 @@ def sample_posterior(cleanD, prior_params):
     for row in toprint:
         print row
 
-    return toprint
+    return mean_mus
 
 
 
@@ -166,16 +167,24 @@ def main():
     
 
     #5) Make the following plots:
+
         #1. The full-season batting average of each player versus the MLE from (a)
-    plt.plot(aprilD.AVG, fullD.AVG)
+    plt.scatter(aprilD.AVG, fullD.AVG)
+    plt.title("Full-season batting average versus the MLE batting average")
+    plt.xlabel('MLE AVG (april data)')
+    plt.ylabel('True AVG (full season)')
     plt.savefig("fullD_vs_aprilD.pdf")
+    plt.clf()
+
         #2. The full-season batting average of each player versus the posterior mean from (d) 
             #(Include error bars to show the 95% CI).
-    #plt.plot(posteriorD.AVG, fullD.AVG)
-    #plt.savefig("fullD_vs_posterior.pdf")
+    plt.scatter(posteriorD, fullD.AVG)
+    plt.title("Full-season batting average versus posterior mean")
+    plt.xlabel('Posterior Mean AVG')
+    plt.ylabel('True AVG (full season)')
+    plt.savefig("fullD_vs_posterior.pdf")
+    plt.clf()
     
-
-
 main()
 
 
