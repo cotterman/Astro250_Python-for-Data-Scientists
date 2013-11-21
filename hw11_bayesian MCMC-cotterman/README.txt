@@ -8,6 +8,9 @@
  there is a subfolder called "hw_11_data" which contains the following files:
     1) laa_2011_april.txt
     2) laa_2011_full.txt
+(I also assume that the extraneous /t was removed in the headings of these
+ files, relative to what was posted in the Homeworks folder.)
+
 
 
 

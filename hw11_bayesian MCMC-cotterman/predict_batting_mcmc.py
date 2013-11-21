@@ -12,6 +12,8 @@ import pymc
 import numpy as np
 import pandas as pd
 import os
+#import batting_model
+import matplotlib.pyplot as plt
 
 ###############################################################################
 
@@ -59,6 +61,44 @@ def get_prior_params():
     print "Var of beta prior (compare to .0011): " , (a*b) /((a+b)**2 * (a+b+1))
     return prior_params
 
+def sample_posterior(aprilD, prior_params):
+
+    #relevant data
+    N = aprilD.AB #number of at-bats
+    num_hits = aprilD.H #number of hits
+    nplayers = aprilD.shape[0] #number of players
+    print "nplayers: " , nplayers
+
+    #prior distribution  --- p(theta)
+    alpha0 = [prior_params[0]]*nplayers
+    beta0 = [prior_params[1]]*nplayers
+
+    mu = pymc.Beta(name='mu', alpha=alpha0[0], beta=beta0[0], value=None)
+        
+    #model --- value of x (the number of hits), given theta
+    @pymc.deterministic(plot=False)
+    def modelled_p(mu=mu):
+        return mu
+
+    #likelihood for number of hits
+    xi = pymc.Binomial('xi', n=N[0], p=modelled_p, value=num_hits[0], observed=True)
+    model = pymc.Model([xi, mu])
+
+    #sample from posterior
+    mcmc = pymc.MCMC(model)
+    mcmc.sample(40000, 10000, 1)
+    mu_samples = mcmc.trace('mu')[:]
+
+    #summarize results
+    print "posterior mean: " , mu_samples.mean
+    sorted_ms = sorted(mu_samples)
+    print "posterior 95% CI, lower limit: " , sorted_ms[int(len(mu_samples)*.05)]
+    print "posterior 95% CI, upper limit: " , sorted_ms[int(len(mu_samples)*.95)]
+
+    #graph results
+    pymc.Matplot.plot(mcmc)
+    plt.savefig("diagnostics.pdf")
+
 
 ###############################################################################
 
@@ -69,14 +109,14 @@ def main():
     fullD = pd.read_table(DATA_FOLDER + "/laa_2011_full.txt", sep = "\t", header=0, index_col=None)
 
     #1) Find the MLE of mu_i for each player from the April data.
-    get_MLEs(aprilD)
+    #get_MLEs(aprilD)
 
     #2) Draw a sample from the posterior (of size > 1000) assuming a Beta 
         # prior for each mu_i 
     prior_params = get_prior_params()
-    print prior_params
+    sample_posterior(aprilD, prior_params)
 
-
+    
     #3) Check convergence of your MCMC sampler by looking at the trace plots 
         # for at least 3 of the mu_i
 
@@ -91,3 +131,5 @@ def main():
 
 
 main()
+
+

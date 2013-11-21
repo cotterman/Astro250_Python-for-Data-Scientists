@@ -4,7 +4,7 @@ import pandas as pd
 
 # load in data
 D = pd.read_csv('data_BirthRate.txt')
-X = D.ix[:,1:3]
+X = D.ix[:,1:3] #captures the  social and famPlan columns of data
 change = D['change']
 
 #priors
