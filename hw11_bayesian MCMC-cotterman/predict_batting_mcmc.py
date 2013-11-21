@@ -12,8 +12,11 @@ import pymc
 import numpy as np
 import pandas as pd
 import os
-#import batting_model
 import matplotlib.pyplot as plt
+import random
+
+random.seed(999) #set seed so same results will be obtained with each run
+#Actually, results still differ with each run of program.  Why?
 
 ###############################################################################
 
@@ -30,12 +33,24 @@ print "HW11_FOLDER: " , HW11_FOLDER
 print "DATA_FOLDER: " , DATA_FOLDER
 
 
-def get_MLEs(aprilD):
+
+def combine_raw_data(aprilD, fullD):
+    """
+    Merge raw datasets and keep only relevant variables
+    """
+    aprilDmod = aprilD.rename(columns={'AVG': 'AVG_MLE', 'AB':'AB_april', 'H':'H_april'})
+    fullDmod = fullD.rename(columns={'AVG': 'AVG_truth'})
+    combo = pd.merge(aprilDmod[["Player","AVG_MLE","AB_april","H_april"]], 
+        fullDmod[["Player","AVG_truth"]], on='Player')
+    return combo
+
+
+def get_MLEs(cleanD):
     """ Calculate the MLEs for batting average (mu_i) using data from April
     """
     #the MLE for batting average is equal to the number of hits divided by
         # the number of times at bat.  This number is already in the data.
-    print "\nMLEs for batting average using April Data:\n" , aprilD[["Player", "AVG"]]
+    print "\nMLEs for batting average using April Data:\n" , cleanD[["Player", "AVG_MLE"]]
     
 
 def get_prior_params():
@@ -61,43 +76,75 @@ def get_prior_params():
     print "Var of beta prior (compare to .0011): " , (a*b) /((a+b)**2 * (a+b+1))
     return prior_params
 
-def sample_posterior(aprilD, prior_params):
+
+def sample_posterior(cleanD, prior_params):
+
+    #arrays to store results
+    mean_mus = []
+    CI95s = []
+    truth_in_CI95s = []
 
     #relevant data
-    N = aprilD.AB #number of at-bats
-    num_hits = aprilD.H #number of hits
-    nplayers = aprilD.shape[0] #number of players
+    N = cleanD.AB_april #number of at-bats
+    num_hits = cleanD.H_april #number of hits
+    nplayers = cleanD.shape[0] #number of players
     print "nplayers: " , nplayers
 
     #prior distribution  --- p(theta)
-    alpha0 = [prior_params[0]]*nplayers
-    beta0 = [prior_params[1]]*nplayers
+    alpha0 = prior_params[0]
+    beta0 = prior_params[1]
 
-    mu = pymc.Beta(name='mu', alpha=alpha0[0], beta=beta0[0], value=None)
-        
-    #model --- value of x (the number of hits), given theta
-    @pymc.deterministic(plot=False)
-    def modelled_p(mu=mu):
-        return mu
+    for i in np.arange(nplayers):
 
-    #likelihood for number of hits
-    xi = pymc.Binomial('xi', n=N[0], p=modelled_p, value=num_hits[0], observed=True)
-    model = pymc.Model([xi, mu])
+        mu = pymc.Beta(name='mu', alpha=alpha0, beta=beta0, value=None)
+            
+        #model --- value of x (the number of hits), given theta
+        @pymc.deterministic(plot=False)
+        def modelled_p(mu=mu):
+            return mu
 
-    #sample from posterior
-    mcmc = pymc.MCMC(model)
-    mcmc.sample(40000, 10000, 1)
-    mu_samples = mcmc.trace('mu')[:]
+        #likelihood for number of hits
+        xi = pymc.Binomial('xi', n=N[i], p=modelled_p, value=num_hits[i], observed=True)
+        model = pymc.Model([xi, mu])
 
-    #summarize results
-    print "posterior mean: " , mu_samples.mean
-    sorted_ms = sorted(mu_samples)
-    print "posterior 95% CI, lower limit: " , sorted_ms[int(len(mu_samples)*.05)]
-    print "posterior 95% CI, upper limit: " , sorted_ms[int(len(mu_samples)*.95)]
+        #sample from posterior
+        mcmc = pymc.MCMC(model)
+        N_samp = 10000
+        N_burn = 1000
+        mcmc.sample(N_samp, N_burn, 1)
+        mu_samples = mcmc.trace('mu')[:]
 
-    #graph results
-    pymc.Matplot.plot(mcmc)
-    plt.savefig("diagnostics.pdf")
+        #summarize results
+        mean_mus.append(mu_samples.mean()) #posterior mean
+        sorted_ms = sorted(mu_samples)
+        upperCI = sorted_ms[int(len(mu_samples)*.95)] #posterior 95% CI, upper limit
+        lowerCI = sorted_ms[int(len(mu_samples)*.05)] #posterior 95% CI, lower limit
+        CI95s.append([ lowerCI, upperCI  ])
+        truth_in_CI95s.append( cleanD.AVG_truth[i]<upperCI and cleanD.AVG_truth[i]>lowerCI )
+
+        #3) graph results for first 3 players
+        if i<3:
+            pymc.Matplot.plot(mcmc)
+            plt.savefig("trace_plots_" + str(i) + ".pdf")
+
+    #4) Compute the posterior mean and posterior 95% CI for each mu_i
+        # For how many of the 13 players does the full-season batting average 
+        # fall within the 95% CI?
+    print "\nNumber of players for which full-season batting avg is within 95% CI: "
+    print truth_in_CI95s.count(True)
+
+    players = cleanD.Player.tolist()
+    AVG_MLE = cleanD.AVG_MLE.tolist()
+    AVG_truth = cleanD.AVG_truth.tolist()
+    toprint = zip(players, AVG_MLE, mean_mus, CI95s, AVG_truth, truth_in_CI95s)
+    #posterior_mus = pd.DataFrame(np.array(mean_mus),columns=["post_AVG"])
+    #posteriorD = fullD.append(posterior_mus)
+    print "\nPlayer, AVG_MLE, AVG_posterior, AVG_95CI, AVG_truth, truth_in_95CI: \n"
+    for row in toprint:
+        print row
+
+    return toprint
+
 
 
 ###############################################################################
@@ -107,27 +154,26 @@ def main():
     #Read data
     aprilD = pd.read_table(DATA_FOLDER + "/laa_2011_april.txt", sep = "\t", header=0, index_col=None)
     fullD = pd.read_table(DATA_FOLDER + "/laa_2011_full.txt", sep = "\t", header=0, index_col=None)
+    cleanD = combine_raw_data(aprilD, fullD)
 
     #1) Find the MLE of mu_i for each player from the April data.
-    #get_MLEs(aprilD)
+    get_MLEs(cleanD)
 
     #2) Draw a sample from the posterior (of size > 1000) assuming a Beta 
-        # prior for each mu_i 
+        # prior for each mu_i and summarize results
     prior_params = get_prior_params()
-    sample_posterior(aprilD, prior_params)
-
+    posteriorD = sample_posterior(cleanD, prior_params)
     
-    #3) Check convergence of your MCMC sampler by looking at the trace plots 
-        # for at least 3 of the mu_i
-
-    #4) Compute the posterior mean and posterior 95% CI for each mu_i
-        # For how many of the 13 players does the full-season batting average 
-        # fall within the 95% CI?
 
     #5) Make the following plots:
         #1. The full-season batting average of each player versus the MLE from (a)
+    plt.plot(aprilD.AVG, fullD.AVG)
+    plt.savefig("fullD_vs_aprilD.pdf")
         #2. The full-season batting average of each player versus the posterior mean from (d) 
             #(Include error bars to show the 95% CI).
+    #plt.plot(posteriorD.AVG, fullD.AVG)
+    #plt.savefig("fullD_vs_posterior.pdf")
+    
 
 
 main()
