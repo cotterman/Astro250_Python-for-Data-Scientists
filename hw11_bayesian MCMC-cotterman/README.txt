@@ -1,0 +1,13 @@
+###############################################################################
+### Assignment 11: Bayesian Inference and Markov Chain Monte Carlo (MCMC) #####
+###############################################################################
+
+#My code for this assignment is contained in predict_batting_mcmc.py
+
+#I assume inside the folder from which the user runs predict_batting_mcmc.py,
+ there is a subfolder called "hw_11_data" which contains the following files:
+    1) laa_2011_april.txt
+    2) laa_2011_full.txt
+
+
+
