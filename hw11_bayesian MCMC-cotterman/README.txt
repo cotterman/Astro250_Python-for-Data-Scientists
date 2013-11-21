@@ -38,9 +38,9 @@ Number of players for which full-season batting avg is within 95% CI: 9
 
 
 ### Trace plots (for question 3) are saved as:
+    trace_plots_0.pdf
     trace_plots_1.pdf
     trace_plots_2.pdf
-    trace_plots_3.pdf
 
 ### Plots in response to question 5 are saved as:
     fullD_vs_aprilD.pdf

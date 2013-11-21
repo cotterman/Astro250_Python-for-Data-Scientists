@@ -33,6 +33,8 @@ Player, AVG_MLE, AVG_posterior, AVG_95CI, AVG_truth, truth_in_95CI:
 ('Mathis, J', 0.152, 0.23202915943449368, [0.18384517088006658, 0.28395610431108659], 0.174, False)
 ('Wilson, B', 0.125, 0.24919629138337668, [0.19754614464586934, 0.30289866382282138], 0.18899999999999997, False)
 
+Number of players for which full-season batting avg is within 95% CI: 9
+
 
 
 ### Trace plots (for question 3) are saved as:

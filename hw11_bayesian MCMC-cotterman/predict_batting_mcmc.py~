@@ -169,19 +169,19 @@ def main():
     #5) Make the following plots:
 
         #1. The full-season batting average of each player versus the MLE from (a)
-    plt.scatter(aprilD.AVG, fullD.AVG)
+    plt.scatter(fullD.AVG, aprilD.AVG)
     plt.title("Full-season batting average versus the MLE batting average")
-    plt.xlabel('MLE AVG (april data)')
-    plt.ylabel('True AVG (full season)')
+    plt.ylabel('MLE AVG (april data)')
+    plt.xlabel('True AVG (full season)')
     plt.savefig("fullD_vs_aprilD.pdf")
     plt.clf()
 
         #2. The full-season batting average of each player versus the posterior mean from (d) 
             #(Include error bars to show the 95% CI).
-    plt.scatter(posteriorD, fullD.AVG)
+    plt.scatter(fullD.AVG, posteriorD)
     plt.title("Full-season batting average versus posterior mean")
-    plt.xlabel('Posterior Mean AVG')
-    plt.ylabel('True AVG (full season)')
+    plt.ylabel('Posterior Mean AVG')
+    plt.xlabel('True AVG (full season)')
     plt.savefig("fullD_vs_posterior.pdf")
     plt.clf()
     

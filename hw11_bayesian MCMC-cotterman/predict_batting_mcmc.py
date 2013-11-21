@@ -2,7 +2,7 @@
 ## 
 ## Goal: Estimate a hitter's true batting average, mu_i, (for the entire
 ## season) from the first month of data.  Use a beta prior for mu_i and
-## and MCMC sampler to get a binomial posterior.
+## and MCMC sampler to get a binomial posterior for x_i.
 ##
 ## Author: Carolyn Cotterman
 ##
