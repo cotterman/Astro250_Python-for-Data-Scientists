@@ -36,6 +36,29 @@ def get_MLEs(aprilD):
     print "\nMLEs for batting average using April Data:\n" , aprilD[["Player", "AVG"]]
     
 
+def get_prior_params():
+    """
+    The Beta prior encodes our prior knowledge about baseball batting averages. 
+        #The hyperparameters alpha and beta should be chosen to reflect this belief.
+        #For this assignment, we will choose alpha and beta based on the 
+          league-wide averages from 2010.
+          #In 2010 the mean batting average was 0.255 with variance of 0.0011.
+          #Choose alpha and beta to satisfy these prior beliefs
+    """
+    #the mean of the beta distribution is a/(a+b) = .255
+    #the variance of the beta distribution is ab/[(a+b)**2 * (a+b+1)] = .0011
+    #we have 2 equations and 2 unknowns.  Solving for a and b, we get:
+        #(after some pencil-and-paper algebra)
+    chunk1 = (.745/.255) / ( (1+(.745/.255))**2 )
+    chunk2 = .0011 * (1 + (.745/.255) )
+    a = (chunk1 - .0011) / chunk2
+    b = a * (.745/.255)
+    prior_params = (a,b)
+    #test calculation:
+    print "Mean of beta prior (compare to .255): " , a/(a+b)
+    print "Var of beta prior (compare to .0011): " , (a*b) /((a+b)**2 * (a+b+1))
+    return prior_params
+
 
 ###############################################################################
 
@@ -50,14 +73,9 @@ def main():
 
     #2) Draw a sample from the posterior (of size > 1000) assuming a Beta 
         # prior for each mu_i 
+    prior_params = get_prior_params()
+    print prior_params
 
-        # The Beta prior encodes our prior knowledge about baseball batting averages. 
-        # The hyperparameters alpha and beta should be chosen to reflect this belief.
-        # For this assignment, we will choose alpha and beta based on the 
-          # league-wide averages from 2010.
-          # In 2010 the mean batting average was 0.255 and the variance 
-            # between players was 0.0011.
-          # Choose alpha and beta to satisfy these prior beliefs!
 
     #3) Check convergence of your MCMC sampler by looking at the trace plots 
         # for at least 3 of the mu_i
