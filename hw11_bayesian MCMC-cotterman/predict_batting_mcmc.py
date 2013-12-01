@@ -144,7 +144,7 @@ def sample_posterior(cleanD, prior_params):
     for row in toprint:
         print row
 
-    return mean_mus
+    return (mean_mus, CI95s)
 
 
 
@@ -178,7 +178,8 @@ def main():
 
         #2. The full-season batting average of each player versus the posterior mean from (d) 
             #(Include error bars to show the 95% CI).
-    plt.scatter(fullD.AVG, posteriorD)
+    plt.scatter(fullD.AVG, posteriorD[0])
+    #plt.errorbar(x=fullD.AVG, y=posteriorD[0], yerr= posteriorD[1]) #not working.  Why?
     plt.title("Full-season batting average versus posterior mean")
     plt.ylabel('Posterior Mean AVG')
     plt.xlabel('True AVG (full season)')
