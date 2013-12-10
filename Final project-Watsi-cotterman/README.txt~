@@ -1,6 +1,6 @@
 
 ###############################################################################
-######### Title: Data Analytics for Maximizing Donations to Non-Profit#########
+######### Title: Data Analytics for Maximizing Donations to Non-Profit ########
 ######### Author: Carolyn Cotterman ###########################################
 ###############################################################################
 
@@ -22,8 +22,7 @@ Watsi maximize expected total dollars donated?
 # Predictors:
   Medical information:
     Total cost of treatment
-    Type of medical issue
-    cosmetic vs. physical disability vs. life-threatening*
+    Type of medical issue: cosmetic vs. physical disability vs. life-threatening*
     whether medical issue resulted from accident vs. biologically developed*
   Basic patient information
     Age

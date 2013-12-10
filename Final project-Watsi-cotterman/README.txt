@@ -41,4 +41,12 @@ Watsi maximize expected total dollars donated?
 *Extracted from posted text (not provided directly)
 
 
+############################# Employed lecture themes #########################
+
+# Versioning (of course)
+# Numpy & scipy 
+# Plotting
+# Pandas 
+# Interacting with the world 
+
 
