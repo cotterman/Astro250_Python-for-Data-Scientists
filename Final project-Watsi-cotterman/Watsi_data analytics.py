@@ -11,6 +11,7 @@ import urllib2
 from datetime import datetime
 from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
+import statsmodels.formula.api as smf
 
 ###############################################################################
 
@@ -102,6 +103,11 @@ def get_spreadsheet_info():
             if len(ages_and_locs[0])<1:
                 print "problem with ages_and_locs in profile " , profile_link , ages_and_locs
                 continue
+            #only 1 patient from somaliland (next to Ethiopia)
+                #inclusion as separate country leads to misleading graphs/charts
+            country = ages_and_locs[0][1]
+            if country=="Somaliland": 
+                country="Ethiopia"
 
             treat_cost_string = re.findall(costs_pat, row)[0]
             treat_cost = float(treat_cost_string.replace(",",""))
@@ -115,7 +121,7 @@ def get_spreadsheet_info():
             mydf.date_funded[patient_num] = date_funded
             mydf.funding_time[patient_num] = funding_time
             mydf.patient_age[patient_num] = ages_and_locs[0][0]
-            mydf.country[patient_num] = ages_and_locs[0][1]
+            mydf.country[patient_num] = country
             mydf.treat_cost[patient_num] = treat_cost
             patient_num+=1
 
@@ -213,7 +219,8 @@ def get_facial_expression(profile_count):
     for line_num, line in enumerate(open(file)):
         df_smile.profile_ID[line_num] = "{0:0>3}".format(line_num+1) #gen profileID
         df_smile.smile_scale[line_num] = float(line.split(",")[0]) #smile score 0 - 1
-        if df_smile.smile_scale[line_num]==99:
+        #cleaner alternative to change 99s to missing: data.replace(99, np.nan)
+        if df_smile.smile_scale[line_num]==99: 
             df_smile.smile_scale[line_num]=None
     print "\nWe have imported smile info for " , line_num, " profiles. (includes missings.)"
 
@@ -291,7 +298,59 @@ def get_text_and_photo_data(mydf_main, download):
     #print "\nSample from expanded spreadsheet dataframe:\n" , mydf_expand2.ix[:20] , "\n"
     return mydf_expand2
 
+
+def create_age_groups(mydf):
+
+    #create age_group variable
+    age_group_list = []
+    for row_num in xrange(mydf.shape[0]):
+        #from text descriptions, its clear that database lumped 0-yr olds with 1-yr olds
+        if mydf.patient_age[row_num]==1:
+            age_group="infant (0-1)"
+        elif mydf.patient_age[row_num]>=2 and mydf.patient_age[row_num]<6:
+            age_group="toddler/preschool (2-5)"
+        elif mydf.patient_age[row_num]>=6 and mydf.patient_age[row_num]<12:
+            age_group="school-age (6-11)"
+        elif mydf.patient_age[row_num]>=12 and mydf.patient_age[row_num]<20:
+            age_group="preteen/teen (12-19)"
+        elif mydf.patient_age[row_num]>=20 and mydf.patient_age[row_num]<30:
+            age_group="twenty-something (20-29)"
+        elif mydf.patient_age[row_num]>=30 and mydf.patient_age[row_num]<40:
+            age_group="thirty-something (30-39)"
+        elif mydf.patient_age[row_num]>=40 and pd.notnull(mydf.patient_age[row_num]):
+            age_group="forty plus (40+)"
+        else:
+            age_group=None
+        age_group_list.append(age_group)
+
+    mydf['age_group']=age_group_list
+
+    #alternative (better) method: see "Discretization and Binning" in pandas manual
+
+    return mydf
+
+
+def create_day_posted(mydf):
+
+    #create a day number variable to use for regresions
+    first_day = mydf['date_posted'].min()
+    day_num_list = []
+    for row_num in xrange(mydf.shape[0]):
+        time_elapsed = mydf.date_posted[row_num] - first_day
+        #convert datetime.timedelta to number of days
+        if pd.notnull(mydf.date_posted[row_num]):
+            day_num = time_elapsed.total_seconds() / (60.*60*24)
+        day_num_list.append(day_num)
+    mydf.sort(['date_posted'])
+    mydf['day_posted'] = day_num_list
+
+    return mydf
+
+
 def write_data_csv(mydf):
+
+    mydf = create_age_groups(mydf)
+    mydf = create_day_posted(mydf)
     
     dollars_per_day_list = []
     days_diff_list = []
