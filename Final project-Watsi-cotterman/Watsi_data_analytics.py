@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import statsmodels.formula.api as smf
 
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestClassifier
 from sklearn import cross_validation
 from sklearn.cross_validation import cross_val_score
 from sklearn import grid_search
@@ -35,7 +36,7 @@ towrite_path = ppath + processedfolder + towrite
 
 
 def get_spreadsheet_info():
-    """ I will extract basic info from the posted google doc.
+    """ Extract basic info from the posted google doc.
 
     Info extracted includes:           
           #Age
@@ -49,8 +50,10 @@ def get_spreadsheet_info():
     #use regular expression matching to find desired info
     date_pat = re.compile('\d+/\d+/\d+')
     #profileID_pat = re.compile()
-    profile_pat = re.compile('<a target="_blank" href="(https://watsi.org/profile/.*?-.*?)">\d+</a>')
-    age_and_loc_pat = re.compile("<td class=\"s\d+\">(\d+)</td><td dir=\"ltr\" class=\"s\d+\">(.*?)<")
+    profile_pat = re.compile(
+        '<a target="_blank" href="(https://watsi.org/profile/.*?-.*?)">\d+</a>')
+    age_and_loc_pat = re.compile(
+        "<td class=\"s\d+\">(\d+)</td><td dir=\"ltr\" class=\"s\d+\">(.*?)<")
     costs_pat = re.compile('\$([0-9,]*\.\d{2})<')
     
     myfile = "watsi_spreadsheet_v2.html" #downloaded on Dec 9, 2013
@@ -58,7 +61,8 @@ def get_spreadsheet_info():
 
     #create dataframe in which to store spreadsheet info
     mydf = pd.DataFrame(index=range(10000), 
-        columns=['profile_ID','profile_link', 'date_posted', 'date_funded', 'funding_time',
+        columns=['profile_ID','profile_link', 
+                'date_posted', 'date_funded', 'funding_time',
                 'patient_age', 'country', 'treat_cost'])
     patient_num = 0
     for line in open(file):
@@ -67,7 +71,7 @@ def get_spreadsheet_info():
         if len(rows) == 1: continue #this line does not contain patient info
         for row in rows: 
 
-            # try to find a profile link, to verify that this is a row in the data table
+            # try to find a profile link, to verify this is a row in the data table
             profile_links = re.findall(profile_pat, row)
             # if we can't find a profile link, skip this row
             if len(profile_links) == 0: 
@@ -97,17 +101,20 @@ def get_spreadsheet_info():
             date_posted = datetime.strptime(dates[0], '%m/%d/%Y')
             date_funded = datetime.strptime(dates[1], '%m/%d/%Y')
             #eliminate the profiles created in June of 2012 -- this was before watsi
-                #appears to have had any traction (strange time for funding as a result)
+                #appears to have had any traction 
+                #(strange time for funding as a result)
             if date_posted < datetime(2012, 7, 1):
                 continue
             funding_time = date_funded - date_posted
 
             ages_and_locs = re.findall(age_and_loc_pat, row)
             if len(ages_and_locs)<1:
-                print "problem with ages_and_locs in profile " , profile_link , ages_and_locs
+                print "problem with ages_and_locs in profile ",\
+                     profile_link , ages_and_locs
                 continue
             if len(ages_and_locs[0])<1:
-                print "problem with ages_and_locs in profile " , profile_link , ages_and_locs
+                print "problem with ages_and_locs in profile " ,\
+                    profile_link , ages_and_locs
                 continue
             #only 1 patient from somaliland (next to Ethiopia)
                 #inclusion as separate country leads to misleading graphs/charts
@@ -134,13 +141,15 @@ def get_spreadsheet_info():
     #get rid of empty rows
     mydf = mydf.drop(mydf.index[range(patient_num,mydf.shape[0])])
 
-    print "\nWe have " , mydf.shape[0], " profiles in Watsi's main spreadsheet.\n"
-    #print "\nSample from spreadsheet dataframe after first extraction:\n" , mydf.ix[:20] , "\n"     
+    print "\nWe have " , mydf.shape[0], " profiles in Watsi's main spreadsheet.\n"   
     
     return mydf
 
 
 def gender_pronouns(mytext, profile_ID):
+    """ Determine patient gender based on keyword search in profile
+        If sufficiently ambiguous, look up profile by hand
+    """
 
     male_words = ['he','his','him','man','boy']
     female_words = ['she','her','woman','girl']
@@ -214,6 +223,8 @@ def gender_pronouns(mytext, profile_ID):
 
 
 def get_facial_expression(profile_count):
+    """Process smile data in csv file
+    """
 
     myfile = "smiles.csv" #classifications done by human inspection
     file = os.path.join(ppath + downloadfolder + myfile)
@@ -228,21 +239,27 @@ def get_facial_expression(profile_count):
         #cleaner alternative to change 99s to missing: data.replace(99, np.nan)
         if df_smile.smile_scale[line_num]==99: 
             df_smile.smile_scale[line_num]=None
-    print "\nWe have imported smile info for " , line_num, " profiles. (includes missings.)"
+    print "\nWe have imported smile info for " , \
+        line_num, " profiles. (includes missings.)"
 
     return df_smile
 
 
 def get_text_and_photo_data(mydf_main, download):
+    """ Follow links from main spreadsheet to individual profiles.
+        Parse profile data.
+    """
 
     #create dataframe in which to store additional info
     mydf_addon = pd.DataFrame(index=range(mydf_main.shape[0]), 
         columns=['maleness', 'text_length'])
 
-    print "Extract profile text and photo info for " , mydf_main.shape[0], " profiles."
+    print "Extract profile text and photo info for " , \
+        mydf_main.shape[0], " profiles."
     for row_num in xrange(mydf_main.shape[0]):
-    #for row_num in range(3): #use for testing
-        if row_num!=781 and row_num!=836 and row_num!=968: #profiles cannot be downloaded for some reason
+ 
+        #certain profiles are not available
+        if row_num!=781 and row_num!=836 and row_num!=968: 
 
             myfile = "profile_" + str(row_num) + ".html" # file with downloaded page
             file = ppath + downloadfolder + myfile
@@ -257,7 +274,8 @@ def get_text_and_photo_data(mydf_main, download):
             mytext = ""
             for line_num, line in enumerate(open(file)):
 
-                begin_pat = re.compile('</a></div></div><div class="row description"><div class="span2">Description:</div><div')
+                begin_pat = re.compile(
+                    '</a></div></div><div class="row description"><div class="span2">Description:</div><div')
                 begin_text = re.findall(begin_pat, line)
                 if len(begin_text)>0:
                     get_text=1
@@ -265,7 +283,8 @@ def get_text_and_photo_data(mydf_main, download):
                 if get_text==1:
                     mytext = mytext + line
 
-                end_pat = re.compile('</div></div><div class="row transparency"><div class="span2">Transparency:</div><div')
+                end_pat = re.compile(
+                    '</div></div><div class="row transparency"><div class="span2">Transparency:</div><div')
                 end_text = re.findall(end_pat, line)
                 if len(end_text)>0:
                     get_text=0
@@ -275,7 +294,8 @@ def get_text_and_photo_data(mydf_main, download):
             start_char = mytext.find(start_find)
             end_char = mytext.find('</div></div><div class="row transparency">')
             if  start_char==-1 or end_char==-1:
-                print "\nWarning: could not find text descriptors for row " , row_num , "\n"
+                print "\nWarning: could not find text descriptors for row ",\
+                     row_num , "\n"
                 #print mytext
                 continue
             mytext = mytext[start_char+len(start_find):end_char]
@@ -287,7 +307,8 @@ def get_text_and_photo_data(mydf_main, download):
             text_length = len(mytext_clean)
 
             #obtain proportion of gender-specific words that are male 
-            proportion_male = gender_pronouns(mytext_clean, mydf_main.profile_ID[row_num])
+            proportion_male = gender_pronouns(
+                mytext_clean, mydf_main.profile_ID[row_num])
             #print "\n proportion_male: " , proportion_male
         
             #place summary of text in dataframe
@@ -298,19 +319,22 @@ def get_text_and_photo_data(mydf_main, download):
     mydf_photo = get_facial_expression(mydf_main.shape[0])
     #print "\nSample from photo info dataframe:\n" , mydf_photo.ix[:20]
 
-    mydf_expand1 = pd.merge(mydf_main, mydf_addon, left_index=True, right_index=True, how='left')
+    mydf_expand1 = pd.merge(mydf_main, mydf_addon, 
+        left_index=True, right_index=True, how='left')
     mydf_expand2 = pd.merge(mydf_expand1, mydf_photo, on='profile_ID', how='left')  
 
-    #print "\nSample from expanded spreadsheet dataframe:\n" , mydf_expand2.ix[:20] , "\n"
     return mydf_expand2
 
 
 def create_age_groups(mydf):
+    """ Create age groups for simplifying presentation of summary stats
+    """
 
     #create age_group variable
     age_group_list = []
     for row_num in xrange(mydf.shape[0]):
-        #from text descriptions, its clear that database lumped 0-yr olds with 1-yr olds
+        #from text descriptions, 
+            #it's clear that database lumped 0-yr olds with 1-yr olds
         if mydf.patient_age[row_num]==1:
             age_group="infant (0-1)"
         elif mydf.patient_age[row_num]<6:
@@ -338,6 +362,9 @@ def create_age_groups(mydf):
 
 
 def create_day_posted(mydf):
+    """Create a numeric variable representing day of posting.
+        This will be useful for regresions.
+    """
 
     #create a day number variable to use for regresions
     first_day = mydf['date_posted'].min()
@@ -355,6 +382,8 @@ def create_day_posted(mydf):
 
 
 def write_data_csv(mydf):
+    """ Do some additional data wrangling and then write to csv
+    """
 
     mydf = create_age_groups(mydf)
     mydf = create_day_posted(mydf)
@@ -426,7 +455,6 @@ def write_data_csv(mydf):
     }
     mydf['weekend_post'] = mydf['week_day_name_posted'].map(day_to_weekend)
 
-
     mydf.to_csv(towrite_path)
 
 
@@ -438,13 +466,14 @@ def read_data_csv():
     mydf['date_posted'] = pd.to_datetime(mydf['date_posted'])
     mydf['date_funded'] = pd.to_datetime(mydf['date_funded'])
 
-    #won't need this variable
+    mydf = mydf.drop(['Unnamed: 0'], axis=1) 
     
-
     return mydf
 
 
 def convert_to_monthly(mydf):
+    """Create a dataset containing monthly averages
+    """
 
     #create time series with index indicating monthly period
     mydf.index=mydf['date_posted']
@@ -455,9 +484,11 @@ def convert_to_monthly(mydf):
     mydf_M_avg = mydf_M_avg.drop(['profile_ID'], axis=1)
     #number of profiles posted each month 
     myts_M_count = mydf['profile_ID'].resample('M', how='count').to_period(freq='M')
-    mydf_M_count = pd.DataFrame(data=myts_M_count, index=myts_M_count.index, columns=['profiles_posted'])
+    mydf_M_count = pd.DataFrame(data=myts_M_count, 
+        index=myts_M_count.index, columns=['profiles_posted'])
     #combine to create a monthly time series dataframe
-    monthly_df = pd.merge(pd.DataFrame(mydf_M_count),mydf_M_avg,right_index=True, left_index=True)
+    monthly_df = pd.merge(
+        pd.DataFrame(mydf_M_count),mydf_M_avg,right_index=True, left_index=True)
     
     return monthly_df
 
@@ -466,8 +497,7 @@ def summarize_data(mydf):
 
     print "\n************* Summary Stats ****************\n"
 
-    # Data overview (means, stds, min, max of all numeric variables)  
-    mydf = mydf.drop(['Unnamed: 0'], axis=1)  
+    # Data overview (means, stds, min, max of all numeric variables)   
     print mydf.describe()
 
 
@@ -517,8 +547,10 @@ def summarize_data(mydf):
     #time trends (monthly averages)
     monthly_df = convert_to_monthly(mydf)
     fig, axes = plt.subplots(3, 1)
-    monthly_df[['treat_cost','dollars_per_day','text_length']].plot(figsize=(15,15),ax=axes[0])
-    monthly_df[['profiles_posted','patient_age','funding_days']].plot(figsize=(15,15), ax=axes[1]) 
+    monthly_df[['treat_cost','dollars_per_day','text_length']].plot(
+        figsize=(15,15),ax=axes[0])
+    monthly_df[['profiles_posted','patient_age','funding_days']].plot(
+        figsize=(15,15), ax=axes[1]) 
     monthly_df[['maleness','smile_scale']].plot(figsize=(15,15), ax=axes[2]) 
     plt.savefig("01_TimeTrends.pdf")
     plt.clf()
@@ -536,7 +568,8 @@ def run_regressions(mydf):
     #run a very simple regression to estimate effects of regressors on outcome
     results = smf.ols('dollars_per_day ~ \
                       C(week_day_name_posted) + day_posted + C(region) + maleness + \
-                      treat_cost + patient_age:smile_scale + patient_age + smile_scale', data=mydf).fit()
+                      treat_cost + patient_age:smile_scale + \
+                        patient_age + smile_scale', data=mydf).fit()
     print results.summary()
     #smile scale is negative but lacks statistical signficance
 
@@ -549,6 +582,7 @@ def run_regressions(mydf):
 
     
     # run with smile categories (do not treat as linear relationship)
+    mydf = pd.read_csv(towrite_path)
     bins = [0, .45, .55, 1]
     smile_cat_names = ["negative","neutral","positive"]
     smile_dums = pd.get_dummies(pd.cut(mydf.smile_scale, bins, labels=smile_cat_names))
@@ -560,21 +594,29 @@ def run_regressions(mydf):
     #being neutral is better than being positive, and maybe better than being negative
 
 
-def run_random_forest(mydf):
-
-    print "\n************ Random Forest Results ************\n"
+def prepare_data_for_RF(mydf):
+    """Make a couple of data alterations to allow random forest to work.
+    """
 
     #eliminate rows that have 1 or more missing values
     mydf = mydf.dropna(axis=0)
     #convert region to something numerical
     numeric_regions = {
-        'Africa': 1,
+    'Africa': 1,
         'Asia': 2,
         'Central America/ Caribbean': 3,
     }
-    mydf['region_num'] = mydf['region'].map(numeric_regions)
-    
+    mydf['region_num'] = mydf['region'].map(numeric_regions) 
 
+    return mydf
+
+
+def run_random_forest(mydf):
+
+    print "\n************ Random Forest Results ************\n"
+
+    mydf = prepare_data_for_RF(mydf)   
+    
     predictor_names = ['week_day_num_posted','day_posted','maleness','region_num', \
                       'treat_cost','patient_age','smile_scale']
     numfeat = len(predictor_names)
@@ -585,8 +627,8 @@ def run_random_forest(mydf):
     nfolds = 3 #number of folds to use for cross-validation
     #n_estimators is number of trees in forest
     #max_features is the number of features to consider when looking for best split
-    parameters = {'n_estimators':[10,100,1000],  'max_features':[3,5,7]} # rf parameters to try
-    njobs = 1 #number of jobs to run in parallel -- pickle problems may occur if njobs > 1
+    parameters = {'n_estimators':[10,100,1000],  'max_features':[3,5,7]} # to try
+    njobs = 1 #number of jobs to run in parallel
     rf_tune = grid_search.GridSearchCV(RandomForestRegressor(), parameters,
                              n_jobs = njobs, cv = nfolds)
     rf_opt = rf_tune.fit(X,Y)
@@ -597,21 +639,19 @@ def run_random_forest(mydf):
     print("Optimal Model:\n" + str(rf_opt.best_estimator_) + "\n")
     #print "Parameters of random forest:\n " , rf_opt.get_params()
 
-    #save optimal random forest regressor for future
-    #mypickledRF = open('RF_Regressor' , 'wb') #w is for write; b is for binary
-    #pickle.dump(rf_opt.best_estimator_ , mypickledRF) #Save classifier in file "RFclassifier"
-    #mypickledRF.close()
-
     #Now use the optimal model's parameters to run random forest
         #(I couldn't get feature importances directly from the GridSearchCV fit)
-    crf = RandomForestRegressor(n_jobs=njobs, max_features=3, n_estimators=1000).fit(X,Y) 
+    crf = RandomForestRegressor(
+        n_jobs=njobs, max_features=3, n_estimators=1000).fit(X,Y) 
     print "Parameters used in chosen RF model:\n " , crf.get_params()
 
     plotting_names = np.array(('Day','Date','Sex','Region','Cost','Age','Smile'))
-    print crf.feature_importances_
+    #print crf.feature_importances_
     indices = np.argsort(crf.feature_importances_)[::-1][:numfeat]
-    plt.bar(xrange(numfeat), crf.feature_importances_[indices], align='center', alpha=.5)
-    plt.xticks(xrange(numfeat), plotting_names[indices], rotation='horizontal', fontsize=12)
+    plt.bar(xrange(numfeat), crf.feature_importances_[indices], \
+        align='center', alpha=.5)
+    plt.xticks(xrange(numfeat), plotting_names[indices], \
+        rotation='horizontal', fontsize=12)
     plt.xlim([-1, numfeat])
     plt.ylabel('Feature importances', fontsize=12)
     plt.title('Feature importances computed by Random Forest', fontsize=16)
@@ -622,12 +662,45 @@ def run_IPTW(mydf):
 
     print "\n************ IPTW Results ************\n"
 
-    # Calculate probability of smiling (smile_scale>.5) for each patient (="Prob(T)")
-    
-    # Take average donation rate of population with weights = 1/Prob(T)   (="Wt_avg_smile")
-    # Take average donation rate of population with weights = 1/(1-Prob(T)   (="Wt_avg_nosmile")
-    # Average treatment effect (smiling versus not smiling) is Wt_avg_smile - Wt_avg_nosmile
-     
+    mydf = pd.read_csv(towrite_path)
+    mydf = prepare_data_for_RF(mydf) 
+
+    # create smile categories
+    bins = [0, .5, 1]
+    smile_cat_names = ["no_smile","yes_smile"]
+    smile_dums = pd.get_dummies(pd.cut(mydf.smile_scale, bins, labels=smile_cat_names))
+    #print smile_dums.ix[:20]
+    mydf = pd.merge(mydf,smile_dums,left_index=True,right_index=True)
+
+    ## Calculate probability of smiling (smile_scale>.5) for each patient (="Prob(T)")
+        #use random forest to predict smile
+    Y = mydf.yes_smile
+    X = mydf[['week_day_num_posted','day_posted','maleness','region_num', \
+                      'treat_cost','patient_age']]
+    crf = RandomForestClassifier(
+        n_jobs=1, max_features=3, n_estimators=10000).fit(X,Y) 
+
+    #note: rf prob is fraction of trees in which patient is classified as smiling
+    Y_predicted = np.array(crf.predict_proba(X))
+    print "Sample of predicted probabilities of smiling (vs. actual smile)\n"
+    for i in range(10):
+        print Y[i] , "             " , "%.3f" % Y_predicted[i][1]
+    print "\n"
+
+    donation_rate = np.array(mydf.dollars_per_day) #for upcoming calc must be array
+
+    ## Take average donation rate of population with weights = 1/Prob(T) 
+    wt_smile = np.array([1./x[1] for x in Y_predicted]) #weights to apply
+    wt_avg_smile = (donation_rate*wt_smile).sum() / wt_smile.sum()
+
+    ## Take average donation rate of population with weights = 1/(1-Prob(T)
+    wt_nosmile = np.array([1./x[0] for x in Y_predicted])
+    wt_avg_nosmile = (donation_rate*wt_nosmile).sum() / wt_nosmile.sum()
+
+    ## Average treatment effect (smiling versus not smiling) 
+    ATE = wt_avg_smile - wt_avg_nosmile
+    print "Average treatment effect (dollars per day): " , ATE , "\n"
+
 
 ###############################################################################
 
@@ -637,15 +710,15 @@ def main():
     ###### Obtain data and create CSV with relevant features ######
 
     ## Get spreadsheet info from google doc 
-    #spreadsheet_df = get_spreadsheet_info()
+    spreadsheet_df = get_spreadsheet_info()
 
     ## Get data from photo and text 
         #if desired html files are already downloaded, 
          #set download to 0 to prevent re-downloading these files
-    #expanded_df = get_text_and_photo_data(mydf_main=spreadsheet_df, download=0)
+    expanded_df = get_text_and_photo_data(mydf_main=spreadsheet_df, download=0)
 
     ## Create additional variables and write data to file
-    #write_data_csv(expanded_df)
+    write_data_csv(expanded_df)
 
 
     ###### Analysis using data from CSV file ######
@@ -654,20 +727,16 @@ def main():
     mydf = read_data_csv()
 
     ## Produce summary stats and graphs
-    #summarize_data(mydf)
+    summarize_data(mydf)
 
     ## Linear regression analysis
-    #run_regressions(mydf)
+    run_regressions(mydf)
 
     ## Variable importance estimation via random forest
     run_random_forest(mydf)
 
     ## IPTW
-    #run_IPTW(mydf)
-    
-
-    ###### Create word cloud graphic ######
-     
+    run_IPTW(mydf) 
 
 main()
 
