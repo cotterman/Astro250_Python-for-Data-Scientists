@@ -1,0 +1,44 @@
+
+
+    #3) Extract info from text (Saturday)
+        #Gender
+        #Marital status 
+        #Parenthood status 
+        #cosmetic vs. physical disability vs. life-threatening (extra)
+            #"prenatal care" "maternal care"
+            #"accident", "burn", "accidently" "fracture" "broken"
+            #"congenital ", "hereditary", "birth defect" "tumor" "club feet" "walk again"
+            #eye sight, cancer, cancerous, "restore mobility" "walk normally" "cataract" "squamous cell carcinoma"
+        #whether medical issue resulted from accident vs. biologically developed (extra)
+        #Number of characters
+        #Mention of career ambitions (extra)
+            #mention of school, teacher
+        #correlation with DALYs?  (use age and disability info)
+
+        #do people want to give to sad faces, while being more likely to revisit site if confronted with happy faces?
+            #(literature on this?)
+        #why are patient IDs sometimes out of order?  (Is this b/c you try to acheive a mix of patient types on site at given point in time?)
+            #what determines who is featured on front page (i.e., 3 featured profiles)?
+            #were there any changes I should be aware of in terms of profile presentations online?
+
+    #4) Extract photo attributes 
+        #Size of face in frame (extra)
+        #Outdoor/indoor (extra)
+        #Smile/serious -- see http://dalelane.co.uk/blog/?p=2092 (Saturday, by hand)
+            #forced smile?
+        #Focal point of eyes (extra)
+        #camara angle (looking down at child?)
+        #tucked chin (e.g., children looking shy)
+
+    #5) Find correlates of donation rate 
+        #Sunday -- get simple analysis done, plan more complex analysis
+        #Monday -- implement more complex analysis
+
+        #run a "popular" words for different countries (maternal care in Africa, eye stuff in burma, 
+                # meningoencephalocele in Cambodia etc.)
+            #same thing but for high/low funding rate
+            #same thing but for treatment cost 
+
+    #6) Make graphs and figures 
+
+    #7) Make poster 

@@ -137,6 +137,7 @@ def feature_descriptions(feature_names, printme):
         'blue_homogeneity': "blue homogeneity, based on the blue co-occurrence matrix using skimage.feature",
         'blue_ASM': "blue ASM, based on the blue co-occurrence matrix using skimage.feature"
         }
+
     if printme==True:
         print "*** Features used for prediction ***"
         for feature in feature_names:
@@ -274,15 +275,31 @@ def run_final_classifier(vfolder):
     with provided training images.
     """
     ppath , file = os.path.split(os.path.realpath(__file__))
-    vimages_data = summarize_vimages(ppath, vfolder) #narray of images features
-    vX = np.array([f[:-1] for f in vimages_data]) #just the features (X will be a list of lists)
-    vNames = np.array([c[-1] for c in vimages_data]) #list of image names
+    #vimages_data = summarize_vimages(ppath, vfolder) #narray of images features
+    #vX = np.array([f[:-1] for f in vimages_data]) #just the features (X will be a list of lists)
+    #vNames = np.array([c[-1] for c in vimages_data]) #list of image names
 
     mypickledRF = open('RFClassifier' , 'rb') #r is for read; b is for binary
     clf = pickle.load(mypickledRF)
-    vY_predicted = np.array(clf.predict(vX))
+    print clf.feature_importances_.shape
 
-    print_predicted(vNames, vY_predicted)
+    numfeat = 6
+    indices = np.argsort(clf.feature_importances_)[::-1][:numfeat]
+    plt.bar(xrange(numfeat), clf.feature_importances_[indices], align='center', alpha=.5)
+    plt.xticks(xrange(numfeat), X.columns[indices], rotation='vertical', fontsize=12)
+    plt.xlim([-1, numfeat])
+
+    plt.ylabel('Feature importances', fontsize=12)
+
+    #plt.suptitle('Feature importances computed by Random Forest', fontsize=16)
+
+    #f = gcf()
+    #subplots_adjust(bottom=0.3)
+    #f.set_size_inches(11, 8);
+    plt.savefig('feature_importance.png', dpi=150);
+
+    #vY_predicted = np.array(clf.predict(vX))
+    #print_predicted(vNames, vY_predicted)
 
 
 ###############################################################################
@@ -293,10 +310,10 @@ def main():
     ppath = get_ppath() #path of folder containing images
     foldername = "50_categories" #name of folder containing training images
     categories = get_categories(ppath, foldername) #list of image categories
-    images_data = summarize_trimages(categories, ppath, foldername) #list of lists
-    examine_images_data(images_data) #print basic info on what images_data contains
-    X = np.array([f[:-1] for f in images_data]) #just the features (X will be a list of lists)
-    Y = np.array([c[-1] for c in images_data]) #list of categories
+    #images_data = summarize_trimages(categories, ppath, foldername) #list of lists
+    #examine_images_data(images_data) #print basic info on what images_data contains
+    #X = np.array([f[:-1] for f in images_data]) #just the features (X will be a list of lists)
+    #Y = np.array([c[-1] for c in images_data]) #list of categories
 
 
     #make sure this list matches the one constructed in the obtain_features function
@@ -306,25 +323,25 @@ def main():
         "red_contrast", "red_dissimilarity", "red_homogeneity", "red_ASM",
         "green_contrast", "green_dissimilarity", "green_homogeneity", "green_ASM",
         "blue_contrast", "blue_dissimilarity", "blue_homogeneity", "blue_ASM"] #features used
-    feature_descriptions(feature_names, printme=True) #print features and their descriptions
+    #feature_descriptions(feature_names, printme=True) #print features and their descriptions
 
 
     ### Calculate expected score if guessing category randomly#
-    random_guessing(Y, categories)  
+    #random_guessing(Y, categories)  
 
 
     ### Build classifier using "best" random forest ###
     nfolds = 3 #number of folds to use for cross-validation
     #n_estimators is number of trees in forest
     #max_features is the number of features to consider when looking for best split
-    parameters = {'n_estimators':[50,100],  'max_features':[5,10,15,20]} # rf parameters to try
-    build_classifier(X, Y, nfolds, parameters)
+    parameters = {'n_estimators':[5,10],  'max_features':[5,7,10]} # rf parameters to try
+    #build_classifier(X, Y, nfolds, parameters)
 
 
     ### Find the 3 most important features? Test 455 combos (455 = 15 choose 3) ###
-    nfolds2 = 3
-    parameters2 = {'n_estimators':[5, 100]} # rf parameters to try
-    best_feature_combo(images_data, X, Y, nfolds2, parameters2, feature_names)
+    #nfolds2 = 3
+    #parameters2 = {'n_estimators':[5, 100]} # rf parameters to try
+    #best_feature_combo(images_data, X, Y, nfolds2, parameters2, feature_names)
 
 
     ### Use the pickled classifier to classify validation images ###

@@ -9,8 +9,7 @@ people in poor countries who are in need of a medical treatment that they
 cannot afford.  Each patient profile remains on the site until the patient’s 
 treatment is fully funded by donors accessing the site.  Using Python’s image 
 processing and machine-learning tools, I explore the determinants of donation 
-rate.  Do patients who smile in their photo get funded more quickly?  How can 
-Watsi maximize expected total dollars donated? 
+rate. In particular, do patients who smile in their photo get funded more quickly?  
 
 
 ## Variable importance analysis for donation rate:

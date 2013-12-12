@@ -13,6 +13,12 @@ from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
 import statsmodels.formula.api as smf
 
+from sklearn.ensemble import RandomForestRegressor
+from sklearn import cross_validation
+from sklearn.cross_validation import cross_val_score
+from sklearn import grid_search
+from sklearn import metrics
+
 ###############################################################################
 
 #folders within folder from which code is run
@@ -120,7 +126,7 @@ def get_spreadsheet_info():
             mydf.date_posted[patient_num] = date_posted
             mydf.date_funded[patient_num] = date_funded
             mydf.funding_time[patient_num] = funding_time
-            mydf.patient_age[patient_num] = ages_and_locs[0][0]
+            mydf.patient_age[patient_num] = int(ages_and_locs[0][0])
             mydf.country[patient_num] = country
             mydf.treat_cost[patient_num] = treat_cost
             patient_num+=1
@@ -307,20 +313,21 @@ def create_age_groups(mydf):
         #from text descriptions, its clear that database lumped 0-yr olds with 1-yr olds
         if mydf.patient_age[row_num]==1:
             age_group="infant (0-1)"
-        elif mydf.patient_age[row_num]>=2 and mydf.patient_age[row_num]<6:
+        elif mydf.patient_age[row_num]<6:
             age_group="toddler/preschool (2-5)"
-        elif mydf.patient_age[row_num]>=6 and mydf.patient_age[row_num]<12:
+        elif mydf.patient_age[row_num]<12:
             age_group="school-age (6-11)"
-        elif mydf.patient_age[row_num]>=12 and mydf.patient_age[row_num]<20:
+        elif mydf.patient_age[row_num]<20:
             age_group="preteen/teen (12-19)"
-        elif mydf.patient_age[row_num]>=20 and mydf.patient_age[row_num]<30:
+        elif mydf.patient_age[row_num]<30:
             age_group="twenty-something (20-29)"
-        elif mydf.patient_age[row_num]>=30 and mydf.patient_age[row_num]<40:
+        elif mydf.patient_age[row_num]<40:
             age_group="thirty-something (30-39)"
         elif mydf.patient_age[row_num]>=40 and pd.notnull(mydf.patient_age[row_num]):
             age_group="forty plus (40+)"
         else:
             age_group=None
+
         age_group_list.append(age_group)
 
     mydf['age_group']=age_group_list
@@ -336,7 +343,7 @@ def create_day_posted(mydf):
     first_day = mydf['date_posted'].min()
     day_num_list = []
     for row_num in xrange(mydf.shape[0]):
-        time_elapsed = mydf.date_posted[row_num] - first_day
+        time_elapsed = mydf.date_posted[row_num] - first_day 
         #convert datetime.timedelta to number of days
         if pd.notnull(mydf.date_posted[row_num]):
             day_num = time_elapsed.total_seconds() / (60.*60*24)
@@ -398,81 +405,244 @@ def write_data_csv(mydf):
     mydf['dollars_per_day'] = dollars_per_day_list 
     mydf['funding_days'] = days_diff_list   
 
+    
+    #create indicator for day of week (monday, tuesday, etc.)
+    week_day_names = [x.strftime('%A') for x in mydf['date_posted']]
+    mydf['week_day_name_posted'] = week_day_names
+
+    #create indicator for day of week (0 - 6; 0 is Monday)
+    week_day_nums = [x.weekday() for x in mydf['date_posted']]
+    mydf['week_day_num_posted'] = week_day_nums
+
+    #indicator for weekend
+    day_to_weekend = {
+        'Monday': 0,
+        'Tuesday': 0,
+        'Wednesday': 0,
+        'Thursday': 0,
+        'Friday': 0,
+        'Saturday': 1,
+        'Sunday': 1
+    }
+    mydf['weekend_post'] = mydf['week_day_name_posted'].map(day_to_weekend)
+
+
     mydf.to_csv(towrite_path)
 
 
-def summarize_data(towrite_path):
+def read_data_csv():
 
     mydf = pd.read_csv(towrite_path)
+
     #want to make sure dates come in as dates
     mydf['date_posted'] = pd.to_datetime(mydf['date_posted'])
     mydf['date_funded'] = pd.to_datetime(mydf['date_funded'])
-    
-    #histograms (countries, gender, treatment costs, funding days, donation rate, smiles, etc.)
+
+    #won't need this variable
     
 
+    return mydf
+
+
+def convert_to_monthly(mydf):
+
+    #create time series with index indicating monthly period
+    mydf.index=mydf['date_posted']
+    #convert to having a monthly "period" index
+    myts_monthly = mydf.to_period(freq='M') 
+    #monthly averages in which each row represents 1 month
+    mydf_M_avg = mydf.resample('M', how='mean').to_period(freq='M')
+    mydf_M_avg = mydf_M_avg.drop(['profile_ID'], axis=1)
+    #number of profiles posted each month 
+    myts_M_count = mydf['profile_ID'].resample('M', how='count').to_period(freq='M')
+    mydf_M_count = pd.DataFrame(data=myts_M_count, index=myts_M_count.index, columns=['profiles_posted'])
+    #combine to create a monthly time series dataframe
+    monthly_df = pd.merge(pd.DataFrame(mydf_M_count),mydf_M_avg,right_index=True, left_index=True)
+    
+    return monthly_df
+
+
+def summarize_data(mydf):
+
+    print "\n************* Summary Stats ****************\n"
+
+    # Data overview (means, stds, min, max of all numeric variables)  
+    mydf = mydf.drop(['Unnamed: 0'], axis=1)  
+    print mydf.describe()
+
+
+    ## Data exploration ##
+
+    #bar graph showing distribution of smile scores
+    plt.hist(mydf['smile_scale'].dropna(), bins=11)
+    plt.xlabel('Smile scale (0 - 1)')
+    plt.ylabel('Number of Profiles')
+    plt.savefig("01_SmileBars.pdf") #how to save to different location?
+    plt.clf()
+
+    #bar graph showing distribution of patient ages
+    max_age = max(mydf['patient_age'].dropna())
+    print "Max age:" , max_age
+    min_age = min(mydf['patient_age'].dropna()) 
+    print "Min age:" , min_age
+    plt.hist(mydf['patient_age'].dropna(), bins=max_age)
+    plt.xlabel('Patient Age')
+    plt.ylabel('Number of Profiles')
+    plt.savefig("01_AgeBars.pdf")
+    plt.clf()
+
+    #bar graph showing treatment cost
+    mydata = mydf['treat_cost'].dropna()
+    plt.hist(mydata, bins=20) #since max cost is $2000, each bin represents $100
+    plt.xlabel('Treatment Cost (US dollars)')
+    plt.ylabel('Number of Profiles')
+    plt.savefig("01_CostBars.pdf")
+    plt.clf()
+    #display percentiles
+    percentiles = [0,5] + range(10,100,10) + [95,99,100]
+    print "\nTreatment Cost percentiles\n"
+    for myp in percentiles:
+        myq = myp/100.
+        print "Percentile" , myp , ":" ,mydata.quantile(myq)
+
+    #bar graph showing time till fully funded
+    mydata = mydf['funding_days'].dropna()
+    max_days =  mydata.max()
+    plt.hist(mydata, bins=max_days)
+    plt.xlabel('Time till fully funded (days)')
+    plt.ylabel('Number of Profiles')
+    plt.savefig("01_FundDaysBars.pdf")
+    plt.clf()
+
+    #time trends (monthly averages)
+    monthly_df = convert_to_monthly(mydf)
+    fig, axes = plt.subplots(3, 1)
+    monthly_df[['treat_cost','dollars_per_day','text_length']].plot(figsize=(15,15),ax=axes[0])
+    monthly_df[['profiles_posted','patient_age','funding_days']].plot(figsize=(15,15), ax=axes[1]) 
+    monthly_df[['maleness','smile_scale']].plot(figsize=(15,15), ax=axes[2]) 
+    plt.savefig("01_TimeTrends.pdf")
+    plt.clf()
+
+
+    ## Correlates with donation rate (visuals) ##
+
+    ## Correlates with smile scale (visuals) ##
+    
+
+def run_regressions(mydf):
+
+    print "\n************ Regression Results ************\n"
+
+    #run a very simple regression to estimate effects of regressors on outcome
+    results = smf.ols('dollars_per_day ~ \
+                      C(week_day_name_posted) + day_posted + C(region) + maleness + \
+                      treat_cost + patient_age:smile_scale + patient_age + smile_scale', data=mydf).fit()
+    print results.summary()
+    #smile scale is negative but lacks statistical signficance
+
+
+    # model after dropping insignificant terms (backwards selection process)
+    results = smf.ols('dollars_per_day ~ \
+                      weekend_post + treat_cost + patient_age + smile_scale', data=mydf).fit()
+    print results.summary()
+    #smile scale is negative with p-val<.1
+
+    
+    # run with smile categories (do not treat as linear relationship)
+    bins = [0, .45, .55, 1]
+    smile_cat_names = ["negative","neutral","positive"]
+    smile_dums = pd.get_dummies(pd.cut(mydf.smile_scale, bins, labels=smile_cat_names))
+    mydf = pd.merge(mydf,smile_dums,left_index=True,right_index=True)
+    results = smf.ols('dollars_per_day ~ \
+                      treat_cost + patient_age + \
+                      weekend_post + negative + positive', data=mydf).fit()
+    print results.summary() 
+    #being neutral is better than being positive, and maybe better than being negative
+
+
+def run_random_forest(mydf):
+
+    print "\n************ Random Forest Results ************\n"
+
+    #eliminate rows that have 1 or more missing values
+    mydf = mydf.dropna(axis=0)
+    #convert region to something numerical
+    numeric_regions = {
+        'Africa': 1,
+        'Asia': 2,
+        'Central America/ Caribbean': 3,
+    }
+    mydf['region_num'] = mydf['region'].map(numeric_regions)
+    
+
+    predictor_names = ['week_day_num_posted','day_posted','maleness','region_num', \
+                      'treat_cost','patient_age','smile_scale']
+    numfeat = len(predictor_names)
+    Y = mydf.dollars_per_day #variable to predict
+    X = mydf[predictor_names]
+    clf = RandomForestRegressor(n_estimators=1000).fit(X,Y) 
+    print "Parameters of random forest:\n " , clf.get_params()
+
+    plotting_names = np.array(('Day','Date','Sex','Region','Cost','Age','Smile'))
+    print clf.feature_importances_
+    indices = np.argsort(clf.feature_importances_)[::-1][:numfeat]
+    plt.bar(xrange(numfeat), clf.feature_importances_[indices], align='center', alpha=.5)
+    plt.xticks(xrange(numfeat), plotting_names[indices], rotation='horizontal', fontsize=12)
+    plt.xlim([-1, numfeat])
+    plt.ylabel('Feature importances', fontsize=12)
+    plt.title('Feature importances computed by Random Forest', fontsize=16)
+    plt.savefig('03_feature_importance.png', dpi=150);
+
+
+def run_IPTW(mydf):
+
+    print "\n************ IPTW Results ************\n"
+
+    # Calculate probability of smiling (smile_scale>.5) for each patient (="Prob(T)")
+    # Take average donation rate of population with weights = 1/Prob(T)   (="Wt_avg_smile")
+    # Take average donation rate of population with weights = 1/(1-Prob(T)   (="Wt_avg_nosmile")
+    # Average treatment effect (smiling versus not smiling) is Wt_avg_smile - Wt_avg_nosmile
+     
 
 ###############################################################################
 
 def main():
 
+
+    ###### Obtain data and create CSV with relevant features ######
+
     ## Get spreadsheet info from google doc 
-    spreadsheet_df = get_spreadsheet_info()
+    #spreadsheet_df = get_spreadsheet_info()
 
     ## Get data from photo and text 
         #if desired html files are already downloaded, 
          #set download to 0 to prevent re-downloading these files
-    expanded_df = get_text_and_photo_data(mydf_main=spreadsheet_df, download=0)
+    #expanded_df = get_text_and_photo_data(mydf_main=spreadsheet_df, download=0)
 
     ## Create additional variables and write data to file
-    write_data_csv(expanded_df)
+    #write_data_csv(expanded_df)
 
-    ## Obtain basic summary stats (can start running from here if csv is already created)
-    summarize_data(towrite_path)
+
+    ###### Analysis using data from CSV file ######
+
+    ## Read in csv and correct formating that was lost in transition
+    mydf = read_data_csv()
+
+    ## Produce summary stats and graphs
+    #summarize_data(mydf)
+
+    ## Linear regression analysis
+    #run_regressions(mydf)
+
+    ## Variable importance estimation via random forest
+    run_random_forest(mydf)
+
+    ## IPTW
+    #run_IPTW(mydf)
+    
+
+    ###### Create word cloud graphic ######
      
-
-    #3) Extract info from text (Saturday)
-        #Gender
-        #Marital status 
-        #Parenthood status 
-        #cosmetic vs. physical disability vs. life-threatening (extra)
-            #"prenatal care" "maternal care"
-            #"accident", "burn", "accidently" "fracture" "broken"
-            #"congenital ", "hereditary", "birth defect" "tumor" "club feet" "walk again"
-            #eye sight, cancer, cancerous, "restore mobility" "walk normally" "cataract" "squamous cell carcinoma"
-        #whether medical issue resulted from accident vs. biologically developed (extra)
-        #Number of characters
-        #Mention of career ambitions (extra)
-            #mention of school, teacher
-        #correlation with DALYs?  (use age and disability info)
-
-        #do people want to give to sad faces, while being more likely to revisit site if confronted with happy faces?
-            #(literature on this?)
-        #why are patient IDs sometimes out of order?  (Is this b/c you try to acheive a mix of patient types on site at given point in time?)
-            #what determines who is featured on front page (i.e., 3 featured profiles)?
-            #were there any changes I should be aware of in terms of profile presentations online?
-
-    #4) Extract photo attributes 
-        #Size of face in frame (extra)
-        #Outdoor/indoor (extra)
-        #Smile/serious -- see http://dalelane.co.uk/blog/?p=2092 (Saturday, by hand)
-            #forced smile?
-        #Focal point of eyes (extra)
-        #camara angle (looking down at child?)
-        #tucked chin (e.g., children looking shy)
-
-    #5) Find correlates of donation rate 
-        #Sunday -- get simple analysis done, plan more complex analysis
-        #Monday -- implement more complex analysis
-
-        #run a "popular" words for different countries (maternal care in Africa, eye stuff in burma, 
-                # meningoencephalocele in Cambodia etc.)
-            #same thing but for high/low funding rate
-            #same thing but for treatment cost 
-
-    #6) Make graphs and figures -- Tuesday
-
-    #7) Make poster -- Wednesday
 
 main()
 
