@@ -771,7 +771,7 @@ def run_IPTW(mydf):
         Dsample = donation_rate[selected_rows]
         ATE_boot = get_ATE(Xsample, Ysample, Dsample)
         print "Result from 1 bootstrap sample: " , ATE_boot
-        # Skip NaN results (should do something better in future here)
+        # Skip NaN results
         if np.isnan(ATE_boot): continue
         count += 1
         ATE_boots.append(ATE_boot)

@@ -1,8 +1,12 @@
 
 ###############################################################################
-######### Title: Data Analytics for Maximizing Donations to Non-Profit ########
+################################# Title: Data Analytics for Non-Profit ########
 ######### Author: Carolyn Cotterman ###########################################
 ###############################################################################
+
+## Final code: "Watsi_data_analytics.py"
+   (Other code in folder is scratch work and can be ignored.)
+
 
 ## Short Description:  Watsi (www.watsi.org) posts photos and descriptions of 
 people in poor countries who are in need of a medical treatment that they 

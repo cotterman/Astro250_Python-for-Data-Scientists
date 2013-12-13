@@ -2,10 +2,6 @@ import os, sys
 import re
 import nltk
 
-############ extract key words from profiles for use in analysis/graphic #########
-
-
-
 def load_description(fname):
     with open(fname) as fp:
         data = fp.read().decode('ascii', 'ignore')
@@ -37,9 +33,7 @@ def main():
                 words.append(word)
     for word in words:
         print word
-
-    #now pipe these words into a file and use website to create a word cloud
-    # I piped to "key_words.txt"
+    #now pipe these words into a file and use website to create a cloud
     
 if __name__ == '__main__':
     main()

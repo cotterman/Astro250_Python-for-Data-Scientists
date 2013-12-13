@@ -1,6 +1,6 @@
 
 ###############################################################################
-######### Title: Data Analytics for Maximizing Donations to Non-Profit ########
+################################# Title: Data Analytics for Non-Profit ########
 ######### Author: Carolyn Cotterman ###########################################
 ###############################################################################
 
@@ -23,8 +23,7 @@ rate. In particular, do patients who smile in their photo get funded more quickl
 # Outcome measure = average dollars donated per day to patient
 
 # Predictors and controls:
-  Medical information:
-    Total cost of treatment
+  Total cost of treatment
   Basic patient information:
     Age
     Gender*
